@@ -15,6 +15,7 @@ function ForgotPassword() {
           <form className='login-form bg-white p-8  w-96 '>
             
             <h2 className='text-2xl font-bold mb-6'>Forgot Password ? </h2>
+            <h4 className='p-0'>Already have an Account? <Link to='/Login'><b>Log In</b></Link></h4>
             <div className='input-field mb-4'>
               <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='email'>Enter your Registered Email</label>
               <input type='email' id='email' className='w-full my-2 p-2 border border-gray-300 rounded' />

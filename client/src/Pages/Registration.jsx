@@ -41,7 +41,7 @@ function Registration() {
       </div>
       <div className='login-form-container w-1/2 h-screen flex items-center justify-center'>
         <form className='login-form bg-white p-8' onSubmit={handleSubmit}>
-          <h2 className='text-2xl font-bold mb-6'>Register with VoicePress!</h2>
+          <h2 className='text-2xl font-bold mb-6'>Register with AudioPress!</h2>
           <h4 className='p-2'>Already have an Account? <Link to='/Login'><b>Log In</b></Link></h4>
           <button className='w-80 flex items-center justify-evenly ml-2 m-2 p-2 shadow-xl border border-y-2 hover:bg-gray-200'>
             <FcGoogle /><b>Signup with Google Account</b>

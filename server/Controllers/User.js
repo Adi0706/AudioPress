@@ -50,11 +50,45 @@ async function handleSignup(req, res) {
         return res.json({ Error: 'Internal Server Error' });
     }
 }
-async function handleLogin(req,res){ 
-    const {email,password} = req.body ; 
 
+//LOGIN USER 
+async function handleLogin(req, res) {
+    const loginUser = 'SELECT * FROM USER_SIGNUP WHERE email=?';
+    const value = req.body.email;
+
+    try {
+        const dbConnection = await sqlConnection();
+
+        dbConnection.query(loginUser, value, (err, result) => {
+            if (err) {
+                console.error("Database query error:", err);
+                return res.status(500).json({ Error: "Unexpected Error" });
+            }
+
+            if (result.length > 0) {
+                // email exists
+                // check password matches the database or not 
+                bcrypt.compare(req.body.password.toString(), result[0].password, (err, isMatch) => {
+                    if (err) {
+                        console.error("Password comparison error:", err);
+                        return res.status(500).json({ Error: "Unexpected error in comparing password" });
+                    }
+                    if (isMatch) {
+                        // password matches 
+                        return res.status(200).json({ Status: "Success" });
+                    } else {
+                        return res.status(401).json({ Error: "Password does not match" });
+                    }
+                });
+            } else {
+                return res.status(404).json({ Error: "User not found" });
+            }
+        });
+    } catch (error) {
+        console.error("Unexpected error:", error);
+        return res.status(500).json({ Error: "Unexpected Error" });
+    }
 }
-
 module.exports = {
     handleServer,
     handleSignup,
