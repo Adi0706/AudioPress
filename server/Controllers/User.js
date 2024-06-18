@@ -9,30 +9,54 @@ async function handleServer(req, res) {
 // USER SIGNUP 
 async function handleSignup(req, res) {
     const { fullname, email, password } = req.body; // get the values from body first  
-
     try {
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const dbConnection = await sqlConnection();
 
-        const sql = 'INSERT INTO USER_SIGNUP (fullname, email, password) VALUES (?, ?, ?)';
-        const values = [fullname, email, hashedPassword]; // then create the value array 
-
-        const dbConnection = await sqlConnection();//get the dbConnection from Connection file
-        dbConnection.query(sql, values, (err, result) => {
+        // Check if the user already exists
+        const checkUserSql = 'SELECT email FROM USER_SIGNUP WHERE email=?';
+        dbConnection.query(checkUserSql, [email], async (err, result) => {
             if (err) {
-                console.error("Error inserting data:", err);
-                return res.json({Error:"Error in Inserting Data "})
+                console.error("Error checking user existence:", err);
+                return res.json({ Error: "Error in checking user existence" });
             }
-            console.log("Number of records inserted: " + result.affectedRows);
-            return res.json({Status:"Success"})
+            
+            if (result.length > 0) {
+                // User already exists
+                return res.json({ Error: "User Already Exists" });
+            }
+
+            try {
+                // Hash the password
+                const hashedPassword = await bcrypt.hash(password.toString(), saltRounds);
+                const values = [fullname, email, hashedPassword];
+
+                // Insert the new user
+                const newUserSql = 'INSERT INTO USER_SIGNUP (fullname, email, password) VALUES (?, ?, ?)';
+                dbConnection.query(newUserSql, values, (err, result) => {
+                    if (err) {
+                        console.error("Error inserting data:", err);
+                        return res.json({ Error: "Error in inserting data" });
+                    }
+                    console.log("Number of records inserted: " + result.affectedRows);
+                    return res.json({ Status: "Success" });
+                });
+            } catch (hashError) {
+                console.error("Error hashing password:", hashError);
+                return res.json({ Error: "Error hashing password" });
+            }
         });
     } catch (error) {
-        console.error("Error hashing password or connecting to database:", error);
-        return res.json({Error:'Internal Server Error'}) ; 
+        console.error("Error connecting to database:", error);
+        return res.json({ Error: 'Internal Server Error' });
     }
+}
+async function handleLogin(req,res){ 
+    const {email,password} = req.body ; 
+
 }
 
 module.exports = {
     handleServer,
-    handleSignup
+    handleSignup,
+    handleLogin
 };
