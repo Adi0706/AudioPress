@@ -17,6 +17,11 @@ const [values,setValues]=useState({
 
 const navigate = useNavigate() ; 
 
+//access cookies in frontend 
+axios.defaults.withCredentials=true ; 
+
+
+
 const handleSubmit = async (e) => {
   e.preventDefault();
 

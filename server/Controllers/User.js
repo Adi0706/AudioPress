@@ -1,6 +1,14 @@
 const { sqlConnection } = require('../Connection/sqlConnection');
 const bcrypt = require('bcrypt');
 const saltRounds = 10; // Number of salt rounds for bcrypt
+const cookieParser = require('cookie-parser') ; 
+const jwt = require('jsonwebtoken') ; 
+const dotenv = require('dotenv') ; 
+
+
+dotenv.config() ; 
+
+const jwt_secret_key = process.env.JWT_SECRET_KEY ; 
 
 async function handleServer(req, res) {
     return res.send("hello this is server");
@@ -50,7 +58,6 @@ async function handleSignup(req, res) {
         return res.json({ Error: 'Internal Server Error' });
     }
 }
-
 //LOGIN USER 
 async function handleLogin(req, res) {
     const loginUser = 'SELECT * FROM USER_SIGNUP WHERE email=?';
@@ -75,6 +82,13 @@ async function handleLogin(req, res) {
                     }
                     if (isMatch) {
                         // password matches 
+                        //generating jwt token if login is successfull --sending full name and emal in the token 
+
+                        const name  = result[0].fullname ; 
+                        const email = result[0].email ; 
+                        const token = jwt.sign({name,email},jwt_secret_key,{expiresIn:'1d'})
+                        res.cookie('token',token) ; //generating the token which expires in 1 day . 
+
                         return res.status(200).json({ Status: "Success" });
                     } else {
                         return res.status(401).json({ Error: "Password does not match" });
@@ -89,8 +103,40 @@ async function handleLogin(req, res) {
         return res.status(500).json({ Error: "Unexpected Error" });
     }
 }
+//LOGOUT USER
+async function handleLogout(req,res){
+    res.clearCookie('token');
+    return res.json({Status:"Success"})
+}
+//FETCH USER DETAILS
+async function handleFetchUserDetails(req, res) {
+    const { fullname, email } = req.user;
+  
+    try {
+      const dbConnection = await sqlConnection();
+      const getdetails = 'SELECT fullname, email FROM USER_SIGNUP WHERE email=?';
+      
+      dbConnection.query(getdetails, [email], (err, data) => {
+        if (err) {
+          return res.status(500).json({ error: "Error fetching details" });
+        }
+        if (data.length > 0) {
+          const user = data[0];
+          return res.json({ fullname: user.fullname, email: user.email });
+        } else {
+          return res.status(404).json({ error: "User not found" });
+        }
+      });
+    } catch (err) {
+      return res.status(500).json({ error: "Error in fetching details" });
+    }
+  }
+
+
 module.exports = {
     handleServer,
     handleSignup,
-    handleLogin
+    handleLogin,
+    handleLogout,
+    handleFetchUserDetails,
 };

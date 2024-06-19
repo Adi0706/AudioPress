@@ -8,16 +8,22 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LuXCircle } from "react-icons/lu";
 import { LuPencil } from "react-icons/lu";
 import { MdDeleteOutline } from "react-icons/md";
+import axios from 'axios' ; 
+
 
 function LoginDashBoard() {
   const [showSidebar, setShowSideBar] = useState(false);
   const [showExplore, setShowExplore] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [settingsModal, setSettingsModal] = useState(false);
-  const [fullName, setFullName] = useState('Aditya Bhattacharjee');
-  const [email, setEmail] = useState('adityab76@gmail.com');
-  const navigate = useNavigate();
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+ 
   const clickOutsideRef = useRef(null);
+  const navigate= useNavigate() ; 
+
+
+  axios.defaults.withCredentials = true ; 
 
   const handleShowSideBar = () => {
     setShowSideBar(true);
@@ -40,7 +46,14 @@ function LoginDashBoard() {
   }
 
   const handleNavigateLogout = () => {
-    navigate("/");
+    axios.get('http://localhost:5000/api/user/Logout') 
+    .then(res=>{
+      navigate('/')
+      window.location.reload(true) ; //forces a reload in server not the cached version
+      console.log(res.data) ; 
+    })
+    .catch(err=>console.log(err)) ; 
+    
   }
 
   const handleSettingsModal = () => {
@@ -65,6 +78,20 @@ function LoginDashBoard() {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/user/UserDetails", { withCredentials: true });
+        setFullName(res.data.fullname);
+        setEmail(res.data.email);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+  
+    fetchUserDetails();
+  }, []);
+  
   const RenderAccountShowModal = () => {
     if (showAccountModal) {
       return (
