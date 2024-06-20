@@ -4,6 +4,7 @@ const saltRounds = 10; // Number of salt rounds for bcrypt
 const cookieParser = require('cookie-parser') ; 
 const jwt = require('jsonwebtoken') ; 
 const dotenv = require('dotenv') ; 
+const { v4: uuidv4 } = require('uuid');
 
 
 dotenv.config() ; 
@@ -36,6 +37,7 @@ async function handleSignup(req, res) {
             try {
                 // Hash the password
                 const hashedPassword = await bcrypt.hash(password.toString(), saltRounds);
+                // const _id=uuidv4() ; 
                 const values = [fullname, email, hashedPassword];
 
                 // Insert the new user
@@ -86,7 +88,8 @@ async function handleLogin(req, res) {
 
                         const name  = result[0].fullname ; 
                         const email = result[0].email ; 
-                        const token = jwt.sign({name,email},jwt_secret_key,{expiresIn:'1d'})
+                        const _id = result[0].id;
+                        const token = jwt.sign({_id,name,email},jwt_secret_key,{expiresIn:'1d'})
                         res.cookie('token',token) ; //generating the token which expires in 1 day . 
 
                         return res.status(200).json({ Status: "Success" });
@@ -110,27 +113,71 @@ async function handleLogout(req,res){
 }
 //FETCH USER DETAILS
 async function handleFetchUserDetails(req, res) {
-    const { fullname, email } = req.user;
-  
+    const { email } = req.user; // Assuming req.user contains the authenticated user's details
+
     try {
-      const dbConnection = await sqlConnection();
-      const getdetails = 'SELECT fullname, email FROM USER_SIGNUP WHERE email=?';
-      
-      dbConnection.query(getdetails, [email], (err, data) => {
-        if (err) {
-          return res.status(500).json({ error: "Error fetching details" });
-        }
-        if (data.length > 0) {
-          const user = data[0];
-          return res.json({ fullname: user.fullname, email: user.email });
-        } else {
-          return res.status(404).json({ error: "User not found" });
-        }
-      });
+        const dbConnection = await sqlConnection();
+        const getDetailsQuery = 'SELECT fullname, email FROM USER_SIGNUP WHERE email = ?';
+
+        dbConnection.query(getDetailsQuery, [email], (err, data) => {
+            if (err) {
+                console.error("Error fetching details:", err);
+                return res.status(500).json({ error: "Error fetching details" });
+            }
+
+            if (data.length > 0) {
+                const user = data[0];
+                return res.json({ fullname: user.fullname, email: user.email });
+            } else {
+                return res.status(404).json({ error: "User not found" });
+            }
+        });
     } catch (err) {
-      return res.status(500).json({ error: "Error in fetching details" });
+        console.error("Error in fetching details:", err);
+        return res.status(500).json({ error: "Error in fetching details" });
     }
-  }
+}
+//UPDATE USER DETAILS 
+async function handleUpdateUserDetails(req, res) {
+    // Take the current name and email from the request body
+    const { fullname, email } = req.body;
+
+    // Check if the fullname and email are present
+    if (!fullname || !email) {
+        return res.status(400).json({ Error: "Name and email are required" });
+    }
+
+    try {
+        // Get a database connection
+        const dbConnection = await sqlConnection();
+
+        // SQL query to update the user details
+        const updateSqlQuery = 'UPDATE USER_SIGNUP SET fullname = ?, email = ? WHERE id = ?';
+        const values = [fullname, email, req.user._id]; // Assuming req.user.id contains the user's ID
+
+        // Execute the query
+        dbConnection.query(updateSqlQuery, values, (err, result) => {
+            if (err) {
+                console.error("Error executing query:", err);
+                return res.status(500).json({ Error: "Failed to update user details" });
+            }
+            // Check if any rows were affected (optional)
+            if (result.rowCount === 0) {
+                return res.status(404).json({ Error: "User not found or no changes made" });
+            }
+            // Respond with success message
+            return res.status(200).json({ Status: "User details updated successfully" });
+        });
+
+    } catch (err) {
+        console.error("Database connection error:", err);
+        return res.status(500).json({ Error: "Internal Server Error" });
+    }
+}
+//FORGOT PASSWORD 
+async function handleForgotPassword(req,res){
+
+}
 
 
 module.exports = {
@@ -139,4 +186,6 @@ module.exports = {
     handleLogin,
     handleLogout,
     handleFetchUserDetails,
+    handleUpdateUserDetails,
+    handleForgotPassword
 };

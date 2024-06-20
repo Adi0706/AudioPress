@@ -5,11 +5,9 @@ import { FaSearch } from 'react-icons/fa';
 import { MdKeyboardVoice } from "react-icons/md";
 import NewsImage from '../Media/dashboard-img.png';
 import { Link, useNavigate } from 'react-router-dom';
-import { LuXCircle } from "react-icons/lu";
-import { LuPencil } from "react-icons/lu";
+import { LuXCircle, LuPencil } from "react-icons/lu";
 import { MdDeleteOutline } from "react-icons/md";
-import axios from 'axios' ; 
-
+import axios from 'axios';
 
 function LoginDashBoard() {
   const [showSidebar, setShowSideBar] = useState(false);
@@ -18,12 +16,11 @@ function LoginDashBoard() {
   const [settingsModal, setSettingsModal] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
- 
+
   const clickOutsideRef = useRef(null);
-  const navigate= useNavigate() ; 
+  const navigate = useNavigate();
 
-
-  axios.defaults.withCredentials = true ; 
+  axios.defaults.withCredentials = true;
 
   const handleShowSideBar = () => {
     setShowSideBar(true);
@@ -43,39 +40,38 @@ function LoginDashBoard() {
 
   const handleAccountModal = () => {
     setShowAccountModal(!showAccountModal);
-  }
+  };
 
   const handleNavigateLogout = () => {
-    axios.get('http://localhost:5000/api/user/Logout') 
-    .then(res=>{
-      navigate('/')
-      window.location.reload(true) ; //forces a reload in server not the cached version
-      console.log(res.data) ; 
-    })
-    .catch(err=>console.log(err)) ; 
-    
-  }
+    axios.get('http://localhost:5000/api/user/Logout')
+      .then(res => {
+        navigate('/');
+        window.location.reload(true); // Force reload to clear session
+        console.log(res.data);
+      })
+      .catch(err => console.log(err));
+  };
 
   const handleSettingsModal = () => {
     setSettingsModal(true);
-  }
+  };
 
   const handleCloseSettingModal = () => {
     setSettingsModal(false);
-  }
+  };
 
   const handleRefFunction = (event) => {
     if (clickOutsideRef.current && !clickOutsideRef.current.contains(event.target)) {
       setShowAccountModal(false);
     }
-  }
+  };
 
   useEffect(() => {
     document.addEventListener('mousedown', handleRefFunction);
 
     return () => {
       document.removeEventListener('mousedown', handleRefFunction);
-    }
+    };
   }, []);
 
   useEffect(() => {
@@ -88,10 +84,36 @@ function LoginDashBoard() {
         console.log(err);
       }
     };
-  
+
     fetchUserDetails();
   }, []);
-  
+
+  const handleUpdateUser = async () => {
+    try {
+      // Validate that fullName and email are not empty
+      if (!fullName || !email) {
+        alert("Please provide both Full Name and Email");
+        return;
+      }
+
+      // Send PUT request to update user details
+      const res = await axios.put("http://localhost:5000/api/user/Update", {
+        fullname: fullName,
+        email: email
+      });
+
+      // Handle response
+      if (res.status === 200) {
+        alert("User Details Updated Successfully");
+      } else {
+        alert("Failed to update user details");
+      }
+    } catch (err) {
+      console.error("Error updating user details:", err);
+      alert("Error updating user details. Please try again.");
+    }
+  };
+
   const RenderAccountShowModal = () => {
     if (showAccountModal) {
       return (
@@ -99,9 +121,8 @@ function LoginDashBoard() {
           <div className='my-5'>
             <VscAccount className='w-12 h-12' />
             <p className='text-3xl'><strong>{fullName}</strong></p>
-            <p className=''>{email}</p>
+            <p>{email}</p>
           </div>
-          
           <div>
             <p className='text-black hover:text-blue-300 cursor-pointer' onClick={handleSettingsModal}>Settings</p>
             <p className='text-black hover:text-blue-300 cursor-pointer' onClick={handleNavigateLogout}>Log out</p>
@@ -117,14 +138,14 @@ function LoginDashBoard() {
       return (
         <div className='absolute h-screen w-screen shadow-xl bg-white'>
           <div className='flex items-center justify-between p-5'>
-            <p className='text-5xl font-bold'>Your Profile
-              <p className='text-lg font-semibold text-gray-500 ml-2'>MANAGE YOUR PROFILE</p>
+            <p className='text-5xl font-bold'>Your Profile<br/>
+              <span className='text-lg font-semibold text-gray-500 ml-2'>MANAGE YOUR PROFILE</span>
             </p>
-            <p><LuXCircle className='w-7 h-7 cursor-pointer' onClick={handleCloseSettingModal} /></p>
+            <LuXCircle className='w-7 h-7 cursor-pointer' onClick={handleCloseSettingModal} />
           </div>
           <div className='w-screen h-auto flex items-center justify-around mt-24'>
-            <div className=' shadow-xl flex flex-col items-center rounded-3xl p-12'>
-             <div className='p-12 flex flex-col items-center text-3xl'>
+            <div className='shadow-xl flex flex-col items-center rounded-3xl p-12'>
+              <div className='p-12 flex flex-col items-center text-3xl'>
                 <label htmlFor='fullName' className='font-bold'>Your Full Name</label>
                 <input
                   type='text'
@@ -134,7 +155,7 @@ function LoginDashBoard() {
                   onChange={(e) => setFullName(e.target.value)}
                   className='border p-2 rounded'
                 />
-             </div>
+              </div>
               <div className="mt-4 flex flex-col items-center p-4 text-3xl">
                 <label htmlFor='email' className='font-bold'>Your Email</label>
                 <input
@@ -146,16 +167,16 @@ function LoginDashBoard() {
                   className='border p-2 rounded'
                 />
               </div>
-              <button className='mt-12 border px-7 py-2 rounded-full bg-red-500 font-semibold text-white hover:bg-red-200'>SAVE CHANGES</button>
+              <button className='mt-12 border px-7 py-2 rounded-full bg-red-500 font-semibold text-white hover:bg-red-200' onClick={handleUpdateUser}>SAVE CHANGES</button>
             </div>
-            <div className=''>
+            <div>
               <VscAccount className='w-56 h-56 account-icon' />
               <div className='flex items-center justify-between mt-7'>
                 <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200'>
-                  REPLACE<LuPencil className='mx-2' />
+                  REPLACE <LuPencil className='mx-2' />
                 </button>
                 <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200'>
-                  REMOVE<MdDeleteOutline className='mx-2' />
+                  REMOVE <MdDeleteOutline className='mx-2' />
                 </button>
               </div>
             </div>
@@ -164,7 +185,7 @@ function LoginDashBoard() {
       );
     }
     return null;
-  }
+  };
 
   const RenderSideBar = () => {
     return (
@@ -205,35 +226,31 @@ function LoginDashBoard() {
   };
 
   return (
-    <>
-      <div className='Dashboard w-screen h-screen flex relative'>
-        {RenderSettingsModal()}
-        <div
-          className='w-12 h-screen border-r flex flex-col items-start p-2 justify-between'
-          onMouseLeave={handleCloseSideBar}
-        >
-          <div>
-            <Link to='/LoginDashboard'> <img src={Logo} alt="logo" className='w-7 cursor-pointer' /></Link>
-            <FaSearch className='w-5 h-5 mx-2 my-5 cursor-pointer'
-              onMouseEnter={handleShowSideBar}
-            />
-          </div>
-          <VscAccount className='w-7 h-7 cursor-pointer account-icon' onClick={handleAccountModal} />
-          {RenderAccountShowModal()}
+    <div className='Dashboard w-screen h-screen flex relative'>
+      {RenderSettingsModal()}
+      <div
+        className='w-12 h-screen border-r flex flex-col items-start p-2 justify-between'
+        onMouseLeave={handleCloseSideBar}
+      >
+        <div>
+          <Link to='/LoginDashboard'> <img src={Logo} alt="logo" className='w-7 cursor-pointer' /></Link>
+          <FaSearch className='w-5 h-5 mx-2 my-5 cursor-pointer' onMouseEnter={handleShowSideBar} />
         </div>
-        {showSidebar && <RenderSideBar />}
-        <div className='Dashboard-main w-full flex flex-col items-center justify-center'>
-          <h1 className='text-5xl font-bold'>Your News Feed</h1>
-          <p className='my-5 text-lg'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
-          <span className='flex gap-8'>
-            <p className='font-semibold text-black hover:text-gray-500 cursor-pointer' onClick={handleFeed}>Feed</p>
-            <p className='font-semibold text-black hover:text-gray-500 cursor-pointer' onClick={handleShowExplore}>Explore</p>
-          </span>
-          <div className='w-2/4 border-b border-gray-300 my-5'></div>
-          {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-3/5 rounded-full mt-12 shadow-xl' />}
-        </div>
+        <VscAccount className='w-7 h-7 cursor-pointer account-icon' onClick={handleAccountModal} />
+        {RenderAccountShowModal()}
       </div>
-    </>
+      {showSidebar && <RenderSideBar />}
+      <div className='Dashboard-main w-full flex flex-col items-center justify-center'>
+        <h1 className='text-5xl font-bold'>Your News Feed</h1>
+        <p className='my-5 text-lg'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
+        <div className='flex gap-8'>
+          <p className='font-semibold text-black hover:text-gray-500 cursor-pointer' onClick={handleFeed}>Feed</p>
+          <p className='font-semibold text-black hover:text-gray-500 cursor-pointer' onClick={handleShowExplore}>Explore</p>
+        </div>
+        <div className='w-2/4 border-b border-gray-300 my-5'></div>
+        {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-3/5 rounded-full mt-12 shadow-xl' />}
+      </div>
+    </div>
   );
 }
 

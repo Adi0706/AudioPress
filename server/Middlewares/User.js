@@ -13,7 +13,7 @@ const verifytoken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, jwt_secret_key);
-    req.user = decoded;
+    req.user = decoded; // use this decoded value from token to verify
     next();
   } catch (err) {
     return res.status(401).json({ error: "Unauthorized, invalid token" });

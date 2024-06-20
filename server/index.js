@@ -5,6 +5,7 @@ const dotenv = require('dotenv') ;
 const UserRoutes  = require ('./Routes/User');
 const { sqlConnection } = require('./Connection/sqlConnection');
 const cookieParser = require('cookie-parser') ; 
+const bodyParser = require('body-parser');
 
 //.env handle...
 dotenv.config() ; 
@@ -21,12 +22,12 @@ sqlConnection() ;
 app.use(express.json()) ; 
 app.use(cors({
     origin:["http://localhost:3000"],
-    methods:["POST,'GET"] , 
+    methods:["POST,'GET","PUT"] , 
     credentials:true , 
 })) ; 
 app.use(express.urlencoded({extended:true})) ; 
 app.use(cookieParser()) ; 
-
+app.use(bodyParser.json());
 
 
 //api endpoints...
