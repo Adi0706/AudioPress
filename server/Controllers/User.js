@@ -4,12 +4,14 @@ const saltRounds = 10; // Number of salt rounds for bcrypt
 const cookieParser = require('cookie-parser') ; 
 const jwt = require('jsonwebtoken') ; 
 const dotenv = require('dotenv') ; 
-const { v4: uuidv4 } = require('uuid');
+const nodemailer = require("nodemailer") ; 
 
 
 dotenv.config() ; 
 
 const jwt_secret_key = process.env.JWT_SECRET_KEY ; 
+const email_jwt_key  = process.env.EMAIL_SECRET_KEY ; 
+const google_app_password = process.env.GOOGLE_APP_PASSWORD
 
 async function handleServer(req, res) {
     return res.send("hello this is server");
@@ -174,11 +176,88 @@ async function handleUpdateUserDetails(req, res) {
         return res.status(500).json({ Error: "Internal Server Error" });
     }
 }
-//FORGOT PASSWORD 
+//FORGOT PASSWORD :
+//NODEMAILER TRANSPORTER 
+const transporter = nodemailer.createTransport({
+    service: 'Gmail', // or any other email service you use
+    auth: {
+        user: 'fakeemailaditya@gmail.com',
+        pass: google_app_password
+    }
+});
 async function handleForgotPassword(req,res){
 
-}
+    const {email} = req.body ; 
 
+
+    try{
+        const dbConnection = await sqlConnection() ; 
+        const value=[email] ; 
+        const forgotPasswordQuery = 'SELECT email from USER_SIGNUP WHERE email=?' ; 
+        dbConnection.query(forgotPasswordQuery,value,(err,data)=>{
+            if(err){
+                return res.json({Error:"Unable to fetch email !"}) ; 
+            }
+            if(data.length > 0 ){
+                
+                const  resetToken = jwt.sign({email:email},email_jwt_key,{expiresIn:"1d"})
+                const resetLink = `http://localhost:3000/ResetPassword/${resetToken}` ; 
+                const mailOptions = {
+                    from: 'AudioPress',
+                    to: email,
+                    subject: 'Password Reset Request',
+                    text: `Please click on the following link to reset your password: ${resetLink}`,
+                    html: `<p>Please click on the following link to reset your password: <a href="${resetLink}">Reset Password</a></p>`
+                };
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        return res.json({ Error: "Unable to send email!" });
+                    } else {
+                        return res.json({ Status: "Password reset email sent successfully!" });
+                    }
+                });
+            }else {
+                return res.json({Error:"User Not Found"}) ;
+            }
+        })
+
+    }catch(err){
+        return res.json({Error:"Error Occurred !"}) ; 
+    }
+
+    //get the email from frontend 
+    //write the query select the email from database which resembles the email we retreived from frontend 
+    //if user does not exist -- give error 
+    //else if user is there -- get the id from jwt token and send it to the nodemailer 
+    //nodemailer will send the email of the reset link to the registered email .... 
+
+}
+//RESET PASSWORD
+async function handleResetPassword(req, res) {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    try {
+        const decoded = jwt.verify(token, email_jwt_key);
+        const email = decoded.email;
+
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        const dbConnection = await sqlConnection();
+        const value = [hashedPassword, email];
+        const updatePasssql = 'UPDATE USER_SIGNUP SET password = ? WHERE email = ?';
+
+        dbConnection.query(updatePasssql, value, (err, data) => {
+            if (err) {
+                return res.json({ Error: "Unable to update password" });
+            }
+            return res.json({ Status: "Password Changed Successfully!" });
+        });
+
+    } catch (err) {
+        return res.json({ Error: "Invalid or expired token" });
+    }
+}
 
 module.exports = {
     handleServer,
@@ -187,5 +266,6 @@ module.exports = {
     handleLogout,
     handleFetchUserDetails,
     handleUpdateUserDetails,
-    handleForgotPassword
+    handleForgotPassword,
+    handleResetPassword
 };

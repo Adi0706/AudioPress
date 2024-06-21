@@ -7,6 +7,7 @@ const {handleLogout} = require('../Controllers/User')
 const {handleFetchUserDetails} = require('../Controllers/User')
 const {handleUpdateUserDetails} = require('../Controllers/User')
 const {handleForgotPassword} = require('../Controllers/User')
+const {handleResetPassword} = require('../Controllers/User')
 
 const {verifytoken} = require('../Middlewares/User') ; 
 
@@ -24,6 +25,7 @@ router.get('/UserDetails', verifytoken, handleFetchUserDetails)
 router.post('/Register',handleSignup)
 router.post('/Login',handleLogin)
 router.post('/ForgotPassword',handleForgotPassword)
+router.post('/ResetPassword/:token',handleResetPassword)
 
 //DELETE ROUTES 
 
