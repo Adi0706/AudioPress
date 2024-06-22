@@ -1,19 +1,51 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import LoginImage from '../Media/Login-image.png';
 import { Link } from 'react-router-dom';
-import { FcGoogle } from "react-icons/fc";
+// import { FcGoogle } from "react-icons/fc";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { GoogleLogin } from 'react-google-login';
+import { gapi } from 'gapi-script';
+
 
 function Registration() {
-
   const navigate = useNavigate();
+  
+  const clientId = '880186097269-2246jg0fba0b6d3p0lov8b23a41g2nat.apps.googleusercontent.com';
 
   const [values, setValues] = useState({
     fullname: '',
     email: '',
     password: '',
   });
+
+  
+
+  const onSuccess = (res) => {
+    console.log("LOGIN SUCCESSFUL! Current user:", res.profileObj);
+    navigate("/LoginDashboard")
+    
+  };
+
+  const onFailure = (res) => {
+    console.log("LOGIN FAILED!", res);
+    
+  };
+
+  useEffect(() => {
+    function start() {
+      gapi.client.init({
+        clientId: clientId,
+        scope: ""
+      }).then(() => {
+        console.log('GAPI client initialized.');
+      }).catch((err) => {
+        console.error('Error initializing GAPI client:', err);
+      });
+    }
+
+    gapi.load('client:auth2', start);
+  }, [clientId]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -32,7 +64,7 @@ function Registration() {
         console.error(err);
         alert("Error during registration");
       });
-  }
+  };
 
   return (
     <div className='Login w-screen h-screen flex'>
@@ -43,9 +75,21 @@ function Registration() {
         <form className='login-form bg-white p-8' onSubmit={handleSubmit}>
           <h2 className='text-2xl font-bold mb-6'>Register with AudioPress!</h2>
           <h4 className='p-2'>Already have an Account? <Link to='/Login'><b>Log In</b></Link></h4>
-          <button className='w-80 flex items-center justify-evenly ml-2 m-2 p-2 shadow-xl border border-y-2 hover:bg-gray-200'>
-            <FcGoogle /><b>Signup with Google Account</b>
-          </button>
+
+          {/* Google Login */}
+          <GoogleLogin
+            clientId={clientId}
+            buttonText="Login with Google Account"
+            onSuccess={onSuccess}
+            onFailure={onFailure}
+            cookiePolicy={'single_host_origin'}
+            isSignedIn={true}
+          >
+            {/* <button className='w-80 flex items-center justify-evenly ml-2 m-2 p-2 shadow-xl border border-y-2 hover:bg-gray-200'>
+              <FcGoogle /><b>Login with Google Account</b>
+            </button> */}
+          </GoogleLogin>
+
           <div className='input-field mb-4'>
             <label className='block text-gray-700 text-sm font-bold mb-2' htmlFor='full-name'>Full Name</label>
             <input

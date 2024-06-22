@@ -8,6 +8,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LuXCircle, LuPencil } from "react-icons/lu";
 import { MdDeleteOutline } from "react-icons/md";
 import axios from 'axios';
+import { gapi } from 'gapi-script';
+
 
 function LoginDashBoard() {
   const [showSidebar, setShowSideBar] = useState(false);
@@ -16,6 +18,7 @@ function LoginDashBoard() {
   const [settingsModal, setSettingsModal] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [googleUser, setGoogleUser] = useState(null);
 
   const clickOutsideRef = useRef(null);
   const navigate = useNavigate();
@@ -88,21 +91,41 @@ function LoginDashBoard() {
     fetchUserDetails();
   }, []);
 
+  useEffect(() => {
+    const start = () => {
+      gapi.client.init({
+        clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+        scope: ''
+      }).then(() => {
+        const auth2 = gapi.auth2.getAuthInstance();
+        if (auth2.isSignedIn.get()) {
+          const profile = auth2.currentUser.get().getBasicProfile();
+          setGoogleUser({
+            fullName: profile.getName(),
+            email: profile.getEmail(),
+            imageUrl: profile.getImageUrl()
+          });
+        }
+      }).catch(error => {
+        console.error('Google API Initialization Error:', error);
+      });
+    };
+
+    gapi.load('client:auth2', start);
+  }, []);
+
   const handleUpdateUser = async () => {
     try {
-      // Validate that fullName and email are not empty
       if (!fullName || !email) {
         alert("Please provide both Full Name and Email");
         return;
       }
 
-      // Send PUT request to update user details
       const res = await axios.put("http://localhost:5000/api/user/Update", {
         fullname: fullName,
         email: email
       });
 
-      // Handle response
       if (res.status === 200) {
         alert("User Details Updated Successfully");
       } else {
@@ -112,29 +135,54 @@ function LoginDashBoard() {
       console.error("Error updating user details:", err);
       alert("Error updating user details. Please try again.");
     }
+  }
+
+  const handleGoogleLogout = () => {
+    const auth2 = gapi.auth2.getAuthInstance();
+    auth2.signOut().then(() => {
+      setGoogleUser(null); // Clear Google user state
+      // Perform any additional logout actions here
+      navigate('/'); // Navigate to the home page or login page after logout
+    }).catch((error) => {
+      console.error('Error signing out:', error);
+      // Handle sign-out errors if necessary
+    });
   };
+  
 
   const RenderAccountShowModal = () => {
     if (showAccountModal) {
+      const displayFullName = googleUser ? googleUser.fullName : fullName;
+      const displayEmail = googleUser ? googleUser.email : email;
+  
       return (
         <div ref={clickOutsideRef} className='absolute bottom-12 left-4 w-80 p-7 h-auto flex flex-col items-start justify-between bg-white border rounded-xl shadow-lg'>
           <div className='my-5'>
-            <VscAccount className='w-12 h-12' />
-            <p className='text-3xl'><strong>{fullName}</strong></p>
-            <p>{email}</p>
+            {googleUser && <img src={googleUser.imageUrl} alt="Google User" className='w-12 h-12 rounded-full' />}
+            {!googleUser && <VscAccount className='w-12 h-12' />}
+            <p className='text-3xl'><strong>{displayFullName}</strong></p>
+            <p>{displayEmail}</p>
           </div>
           <div>
             <p className='text-black hover:text-blue-300 cursor-pointer' onClick={handleSettingsModal}>Settings</p>
-            <p className='text-black hover:text-blue-300 cursor-pointer' onClick={handleNavigateLogout}>Log out</p>
+            {googleUser ? (
+              <p className='text-black hover:text-blue-300 cursor-pointer' onClick={handleGoogleLogout}>Log out</p>
+            ) : (
+              <p className='text-black hover:text-blue-300 cursor-pointer' onClick={handleNavigateLogout}>Log out</p>
+            )}
           </div>
         </div>
       );
     }
     return null;
   };
+  
 
   const RenderSettingsModal = () => {
     if (settingsModal) {
+      const displayFullName = googleUser ? googleUser.fullName : fullName;
+      const displayEmail = googleUser ? googleUser.email : email;
+
       return (
         <div className='absolute h-screen w-screen shadow-xl bg-white'>
           <div className='flex items-center justify-between p-5'>
@@ -151,9 +199,10 @@ function LoginDashBoard() {
                   type='text'
                   id='fullName'
                   name='fullName'
-                  value={fullName}
+                  value={displayFullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className='border p-2 rounded'
+                  className='border p-2 rounded cursor-not-allowed'
+                  disabled={!!googleUser}
                 />
               </div>
               <div className="mt-4 flex flex-col items-center p-4 text-3xl">
@@ -162,15 +211,16 @@ function LoginDashBoard() {
                   type='email'
                   id='email'
                   name='email'
-                  value={email}
+                  value={displayEmail}
                   onChange={(e) => setEmail(e.target.value)}
-                  className='border p-2 rounded'
+                  className='border p-2 rounded cursor-not-allowed'
+                  disabled={!!googleUser}
                 />
               </div>
-              <button className='mt-12 border px-7 py-2 rounded-full bg-red-500 font-semibold text-white hover:bg-red-200' onClick={handleUpdateUser}>SAVE CHANGES</button>
+              {!googleUser && <button className='mt-12 border px-7 py-2 rounded-full bg-red-500 font-semibold text-white hover:bg-red-200' onClick={handleUpdateUser}>SAVE CHANGES</button>}
             </div>
             <div>
-              <VscAccount className='w-56 h-56 account-icon' />
+              {googleUser ? <img src={googleUser.imageUrl} alt="Google User" className='w-56 h-56 rounded-full' /> : <VscAccount className='w-56 h-56 account-icon' />}
               <div className='flex items-center justify-between mt-7'>
                 <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200'>
                   REPLACE <LuPencil className='mx-2' />
@@ -236,7 +286,16 @@ function LoginDashBoard() {
           <Link to='/LoginDashboard'> <img src={Logo} alt="logo" className='w-7 cursor-pointer' /></Link>
           <FaSearch className='w-5 h-5 mx-2 my-5 cursor-pointer' onMouseEnter={handleShowSideBar} />
         </div>
-        <VscAccount className='w-7 h-7 cursor-pointer account-icon' onClick={handleAccountModal} />
+        {googleUser ? (
+          <img
+            src={googleUser.imageUrl}
+            alt="Google User"
+            className='w-7 h-7 rounded-full cursor-pointer account-icon'
+            onClick={handleAccountModal}
+          />
+        ) : (
+          <VscAccount className='w-7 h-7 cursor-pointer account-icon' onClick={handleAccountModal} />
+        )}
         {RenderAccountShowModal()}
       </div>
       {showSidebar && <RenderSideBar />}
