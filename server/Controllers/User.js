@@ -5,6 +5,10 @@ const cookieParser = require('cookie-parser') ;
 const jwt = require('jsonwebtoken') ; 
 const dotenv = require('dotenv') ; 
 const nodemailer = require("nodemailer") ; 
+const ProfilePictureModel  = require ('../Models/ProfilePic') ; 
+const multer = require('multer')
+const path=require('path')
+
 
 
 dotenv.config() ; 
@@ -258,6 +262,36 @@ async function handleResetPassword(req, res) {
         return res.json({ Error: "Invalid or expired token" });
     }
 }
+// UPLOAD PROFILE PICTURE
+async function handleProfilePictureUpdate(req, res) {
+ 
+    try {
+        // Check if file is uploaded
+        console.log(req.file)
+        if (!req.file) {
+          return res.status(400).json({ error: "Image file is required" });
+        }
+    
+        // Construct image URL based on where uploads are stored
+        const imgUrl = req.protocol + '://' + req.get('host') + '/upload/images/' + req.file.filename;
+    
+        // Create a new profile picture document and save it to MongoDB
+        const newProfilePicture = await ProfilePictureModel.create({
+          image: imgUrl
+        });
+    
+        console.log("Profile Picture saved:", imgUrl, newProfilePicture);
+    
+        return res.status(201).json({ message: "Profile Picture Updated successfully", imgUrl });
+      } catch (err) {
+        console.error("Error uploading profile picture:", err);
+        return res.status(500).json({ error: "Failed to update profile picture" });
+      }
+    }
+
+
+
+
 
 module.exports = {
     handleServer,
@@ -267,5 +301,6 @@ module.exports = {
     handleFetchUserDetails,
     handleUpdateUserDetails,
     handleForgotPassword,
-    handleResetPassword
+    handleResetPassword,
+    handleProfilePictureUpdate,
 };

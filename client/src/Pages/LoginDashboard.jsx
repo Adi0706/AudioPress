@@ -1,15 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import Logo from '../Media/LandingPage/Logo.png';
+import Logo from '../Media/LandingPage/Logo.png'; // Assuming this is your project's logo
 import { VscAccount } from 'react-icons/vsc';
 import { FaSearch } from 'react-icons/fa';
 import { MdKeyboardVoice } from "react-icons/md";
-import NewsImage from '../Media/dashboard-img.png';
+import NewsImage from '../Media/dashboard-img.png'; // Assuming this is an image for the dashboard
 import { Link, useNavigate } from 'react-router-dom';
 import { LuXCircle, LuPencil } from "react-icons/lu";
 import { MdDeleteOutline } from "react-icons/md";
 import axios from 'axios';
-import { gapi } from 'gapi-script';
-
+import { gapi } from 'gapi-script'; // Assuming you're using Google API for authentication
 
 function LoginDashBoard() {
   const [showSidebar, setShowSideBar] = useState(false);
@@ -19,6 +18,7 @@ function LoginDashBoard() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [googleUser, setGoogleUser] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null); // State to store uploaded image
 
   const clickOutsideRef = useRef(null);
   const navigate = useNavigate();
@@ -148,13 +148,56 @@ function LoginDashBoard() {
       // Handle sign-out errors if necessary
     });
   };
-  
 
+  // Function to handle image change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      axios.post("http://localhost:5000/api/user/ProfilePictureUpdate", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+        .then((res) => {
+          if (res.status === 201) {
+            alert("Profile Picture Updated Successfully");
+          }
+        })
+        .catch((err) => {
+          console.error(err); // Log any errors for debugging
+        });
+    }
+  };
+
+  // Function to upload image to backend
+  // const uploadImage = (imgUrl) => {
+  //   console.log(imgUrl)
+  //   axios.post("http://localhost:5000/api/user/ProfilePictureUpdate", { imgUrl })
+  //     .then((res) => {
+  //       if (res.status === 201) {
+         
+  //         alert("Profile Picture Updated Successfully");
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.error(err); // Log any errors for debugging
+  //     });
+  // };
+
+  // Function to handle removing uploaded image
+  const handleRemoveImage = () => {
+    setUploadedImage(null); // Clear uploaded image from state
+  };
+
+  // Render account modal
   const RenderAccountShowModal = () => {
     if (showAccountModal) {
       const displayFullName = googleUser ? googleUser.fullName : fullName;
       const displayEmail = googleUser ? googleUser.email : email;
-  
+
       return (
         <div ref={clickOutsideRef} className='absolute bottom-12 left-4 w-80 p-7 h-auto flex flex-col items-start justify-between bg-white border rounded-xl shadow-lg'>
           <div className='my-5'>
@@ -176,8 +219,8 @@ function LoginDashBoard() {
     }
     return null;
   };
-  
 
+  // Render settings modal
   const RenderSettingsModal = () => {
     if (settingsModal) {
       const displayFullName = googleUser ? googleUser.fullName : fullName;
@@ -186,7 +229,7 @@ function LoginDashBoard() {
       return (
         <div className='absolute h-screen w-screen shadow-xl bg-white'>
           <div className='flex items-center justify-between p-5'>
-            <p className='text-5xl font-bold'>Your Profile<br/>
+            <p className='text-5xl font-bold'>Your Profile<br />
               <span className='text-lg font-semibold text-gray-500 ml-2'>MANAGE YOUR PROFILE</span>
             </p>
             <LuXCircle className='w-7 h-7 cursor-pointer' onClick={handleCloseSettingModal} />
@@ -220,15 +263,25 @@ function LoginDashBoard() {
               {!googleUser && <button className='mt-12 border px-7 py-2 rounded-full bg-red-500 font-semibold text-white hover:bg-red-200' onClick={handleUpdateUser}>SAVE CHANGES</button>}
             </div>
             <div>
-              {googleUser ? <img src={googleUser.imageUrl} alt="Google User" className='w-56 h-56 rounded-full' /> : <VscAccount className='w-56 h-56 account-icon' />}
-              <div className='flex items-center justify-between mt-7'>
-                <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200'>
+              {googleUser ? (
+                <img src={googleUser.imageUrl} alt="Google User" className='w-80 h-80 rounded-full' />
+              ) : (
+                uploadedImage ? (
+                  <img src={uploadedImage} alt="Uploadedimg-User" className='w-56 h-56 rounded-full' />
+                ) : (
+                  <VscAccount name='file' className='w-56 h-56 account-icon' />
+                )
+              )}
+              {!googleUser?(<div className='flex items-center justify-between mt-7'>
+                <label htmlFor='fileInput' className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200 cursor-pointer'>
                   REPLACE <LuPencil className='mx-2' />
-                </button>
-                <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200'>
+                  <input id='fileInput' type='file' name='file' accept='image/*' style={{ display: 'none' }} onChange={handleImageChange} />
+                </label>
+                <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200' onClick={handleRemoveImage}>
                   REMOVE <MdDeleteOutline className='mx-2' />
                 </button>
-              </div>
+              </div>):null}
+              
             </div>
           </div>
         </div>
@@ -237,6 +290,7 @@ function LoginDashBoard() {
     return null;
   };
 
+  // Render sidebar component
   const RenderSideBar = () => {
     return (
       <div
@@ -267,6 +321,7 @@ function LoginDashBoard() {
     );
   };
 
+  // Render explore component
   const RenderExplore = () => {
     return (
       <div className="w-full text-center">
@@ -275,9 +330,10 @@ function LoginDashBoard() {
     );
   };
 
+  // Main render function
   return (
     <div className='Dashboard w-screen h-screen flex relative'>
-      {RenderSettingsModal()}
+      {RenderSettingsModal()} {/* Render settings modal */}
       <div
         className='w-12 h-screen border-r flex flex-col items-start p-2 justify-between'
         onMouseLeave={handleCloseSideBar}
@@ -296,9 +352,9 @@ function LoginDashBoard() {
         ) : (
           <VscAccount className='w-7 h-7 cursor-pointer account-icon' onClick={handleAccountModal} />
         )}
-        {RenderAccountShowModal()}
+        {RenderAccountShowModal()} {/* Render account modal */}
       </div>
-      {showSidebar && <RenderSideBar />}
+      {showSidebar && <RenderSideBar />} {/* Render sidebar if showSidebar is true */}
       <div className='Dashboard-main w-full flex flex-col items-center justify-center'>
         <h1 className='text-5xl font-bold'>Your News Feed</h1>
         <p className='my-5 text-lg'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
