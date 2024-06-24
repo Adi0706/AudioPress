@@ -15,7 +15,7 @@ function Navbar() {
     <ul className=' flex  items-center  mr-12 p-4 '>
     <li><Link to='/Login'><button className='border px-5 py-2 w-auto text-gray-700  rounded-md mx-2 hover:border-black'>LOG IN</button></Link></li>
         
-<li><button className='border px-12 py-2 w-auto text-white  bg-red-500 rounded-md hover:bg-red-300 hover:text-white'><Link to='/Dashboard'>GET STARTED FOR FREE</Link></button></li>
+    <Link to='/Dashboard'><li><button className='border px-12 py-2 w-auto text-white  bg-red-500 rounded-md hover:bg-red-300 hover:text-white'>GET STARTED FOR FREE</button></li></Link>
 
     </ul>
    </nav>
