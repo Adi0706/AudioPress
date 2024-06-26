@@ -24,25 +24,25 @@ const verifytoken = (req, res, next) => {
   }
 };
 //verify for mongodb profile picture 
-const  verifyMongoToken=(req,res,next)=>{
+// const  verifyMongoToken=(req,res,next)=>{
 
-  const token = req.cookies.token ; 
+//   const mongotoken = req.cookies.mongotoken ; 
 
-  if(!token){
-    return res.status(401).json({error:"Unauthorised transaction , token not found  !"}) ; 
-  }
-  try{
-    const decoded = jwt.verify(token,mongo_jwt_key) ; 
-    req.mongouser = decoded ; 
-    next() ; 
-  }catch(err){
-    return res.status(401).json({error:"Unauthorised transaction,invalid token  !"}) ;
-  }
-}
+//   if(!token){
+//     return res.status(401).json({error:"Unauthorised transaction , token not found  !"}) ; 
+//   }
+//   try{
+//     const decoded = jwt.verify(mongotoken,mongo_jwt_key) ; 
+//     req.mongouser = decoded ; 
+//     next() ; 
+//   }catch(err){
+//     return res.status(401).json({error:"Unauthorised transaction,invalid token  !"}) ;
+//   }
+// }
 
 
 module.exports = {
   verifytoken,
-  verifyMongoToken
+  
   
 };

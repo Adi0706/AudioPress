@@ -276,22 +276,19 @@ async function handleProfilePictureUpdate(req, res) {
         const imgUrl = `${req.protocol}://${req.get('host')}/upload/images/${req.file.filename}`;
         const generatedUserId = uuid(); // Generate a random user ID
 
-        // Find the user's existing profile picture document, if it exists
+        // Check if user already has a profile picture in the database
         let profilePicture = await ProfilePictureModel.findOne({ userId: generatedUserId });
 
         if (profilePicture) {
-            // If a profile picture exists, update it with the new image URL
+            // Update existing profile picture document with new image URL
             profilePicture.image = imgUrl;
             await profilePicture.save();
         } else {
-            // If no profile picture exists, create a new document
+            // Create new profile picture document if none exists
             profilePicture = await ProfilePictureModel.create({
                 userId: generatedUserId,
                 image: imgUrl
             });
-
-            const token = jwt.sign({ userId: generatedUserId, image: imgUrl }, mongo_jwt_key, { expiresIn: "1d" }); // Sign a JWT token
-            res.cookie('token', token); // Set the token as a cookie
         }
 
         console.log("Profile Picture saved:", imgUrl, profilePicture);
@@ -302,14 +299,18 @@ async function handleProfilePictureUpdate(req, res) {
         return res.status(500).json({ error: "Failed to update profile picture" });
     }
 }
-
 // GET PROFILE PICTURE
+// Assuming req.mongouser.userId is set somewhere before calling handleGetProfilePicture
 async function handleGetProfilePicture(req, res) {
     try {
-        // Retrieve the user's profile picture document from MongoDB
+        // Check if userId is present in the request
+        if (!req || !req.mongouser || !req.mongouser.userId) {
+            return res.status(400).json({ error: "User ID is missing or invalid" });
+        }
+
+        // Retrieve the user's profile picture document from MongoDB based on user ID
         const profilePicture = await ProfilePictureModel.findOne({ userId: req.mongouser.userId });
 
-        // Check if a profile picture was found
         if (!profilePicture) {
             return res.status(404).json({ error: "Profile Picture not found" });
         }
@@ -322,6 +323,7 @@ async function handleGetProfilePicture(req, res) {
         return res.status(500).json({ error: "Unable to fetch profile picture" });
     }
 }
+
 
 
 

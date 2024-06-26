@@ -15,7 +15,7 @@ const {handleGetProfilePicture} = require('../Controllers/User')
 
 //middlewares
 const {verifytoken} = require('../Middlewares/User') ; 
-const {verifyMongoToken} = require('../Middlewares/User') ; 
+// const {verifyMongoToken} = require('../Middlewares/User') ; 
 const {upload} = require('../Middlewares/MulterConfig') ; 
 
 
@@ -26,7 +26,7 @@ const router = express.Router() ;
 router.get('/',handleServer) ; 
 router.get('/Logout',handleLogout)
 router.get('/UserDetails', verifytoken, handleFetchUserDetails) 
-router.get('/ProfilePicture',verifyMongoToken,handleGetProfilePicture)
+router.get('/ProfilePicture',handleGetProfilePicture)
 
 
 //POST ROUTES
