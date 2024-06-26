@@ -8,12 +8,14 @@ const nodemailer = require("nodemailer") ;
 const ProfilePictureModel  = require ('../Models/ProfilePic') ; 
 const multer = require('multer')
 const path=require('path')
+const uuid=require('uuid') .v4; 
 
 
 
 dotenv.config() ; 
 
 const jwt_secret_key = process.env.JWT_SECRET_KEY ; 
+const mongo_jwt_key=process.env.JWT_MONGO_KEY
 const email_jwt_key  = process.env.EMAIL_SECRET_KEY ; 
 const google_app_password = process.env.GOOGLE_APP_PASSWORD
 
@@ -264,32 +266,62 @@ async function handleResetPassword(req, res) {
 }
 // UPLOAD PROFILE PICTURE
 async function handleProfilePictureUpdate(req, res) {
- 
     try {
         // Check if file is uploaded
-        console.log(req.file)
         if (!req.file) {
-          return res.status(400).json({ error: "Image file is required" });
+            return res.status(400).json({ error: "Image file is required" });
         }
-    
+
         // Construct image URL based on where uploads are stored
-        const imgUrl = req.protocol + '://' + req.get('host') + '/upload/images/' + req.file.filename;
-    
-        // Create a new profile picture document and save it to MongoDB
-        const newProfilePicture = await ProfilePictureModel.create({
-          image: imgUrl
-        });
-    
-        console.log("Profile Picture saved:", imgUrl, newProfilePicture);
-    
+        const imgUrl = `${req.protocol}://${req.get('host')}/upload/images/${req.file.filename}`;
+        const generatedUserId = uuid(); // Generate a random user ID
+
+        // Find the user's existing profile picture document, if it exists
+        let profilePicture = await ProfilePictureModel.findOne({ userId: generatedUserId });
+
+        if (profilePicture) {
+            // If a profile picture exists, update it with the new image URL
+            profilePicture.image = imgUrl;
+            await profilePicture.save();
+        } else {
+            // If no profile picture exists, create a new document
+            profilePicture = await ProfilePictureModel.create({
+                userId: generatedUserId,
+                image: imgUrl
+            });
+
+            const token = jwt.sign({ userId: generatedUserId, image: imgUrl }, mongo_jwt_key, { expiresIn: "1d" }); // Sign a JWT token
+            res.cookie('token', token); // Set the token as a cookie
+        }
+
+        console.log("Profile Picture saved:", imgUrl, profilePicture);
+
         return res.status(201).json({ message: "Profile Picture Updated successfully", imgUrl });
-      } catch (err) {
+    } catch (err) {
         console.error("Error uploading profile picture:", err);
         return res.status(500).json({ error: "Failed to update profile picture" });
-      }
     }
+}
 
+// GET PROFILE PICTURE
+async function handleGetProfilePicture(req, res) {
+    try {
+        // Retrieve the user's profile picture document from MongoDB
+        const profilePicture = await ProfilePictureModel.findOne({ userId: req.mongouser.userId });
 
+        // Check if a profile picture was found
+        if (!profilePicture) {
+            return res.status(404).json({ error: "Profile Picture not found" });
+        }
+
+        console.log("Profile Picture fetched:", profilePicture.image);
+
+        return res.status(200).json({ imgUrl: profilePicture.image });
+    } catch (err) {
+        console.error("Error fetching profile picture:", err);
+        return res.status(500).json({ error: "Unable to fetch profile picture" });
+    }
+}
 
 
 
@@ -303,4 +335,5 @@ module.exports = {
     handleForgotPassword,
     handleResetPassword,
     handleProfilePictureUpdate,
+    handleGetProfilePicture
 };

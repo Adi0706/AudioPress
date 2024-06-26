@@ -19,6 +19,7 @@ function LoginDashBoard() {
   const [email, setEmail] = useState('');
   const [googleUser, setGoogleUser] = useState(null);
   const [uploadedImage, setUploadedImage] = useState(null); // State to store uploaded image
+  const [profilePicture, setProfilePicture] = useState('');
 
   const clickOutsideRef = useRef(null);
   const navigate = useNavigate();
@@ -89,6 +90,20 @@ function LoginDashBoard() {
     };
 
     fetchUserDetails();
+  }, []);
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/user/ProfilePicture", { withCredentials: true });
+        console.log(res);
+        setProfilePicture(res.data.imgUrl);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchProfilePicture();
   }, []);
 
   useEffect(() => {
@@ -164,6 +179,7 @@ function LoginDashBoard() {
         .then((res) => {
           if (res.status === 201) {
             alert("Profile Picture Updated Successfully");
+            setProfilePicture(res.data.imgUrl); // Update profile picture state with the new image URL
           }
         })
         .catch((err) => {
@@ -172,22 +188,6 @@ function LoginDashBoard() {
     }
   };
 
-  // Function to upload image to backend
-  // const uploadImage = (imgUrl) => {
-  //   console.log(imgUrl)
-  //   axios.post("http://localhost:5000/api/user/ProfilePictureUpdate", { imgUrl })
-  //     .then((res) => {
-  //       if (res.status === 201) {
-         
-  //         alert("Profile Picture Updated Successfully");
-  //       }
-  //     })
-  //     .catch((err) => {
-  //       console.error(err); // Log any errors for debugging
-  //     });
-  // };
-
-  // Function to handle removing uploaded image
   const handleRemoveImage = () => {
     setUploadedImage(null); // Clear uploaded image from state
   };
@@ -202,7 +202,8 @@ function LoginDashBoard() {
         <div ref={clickOutsideRef} className='absolute bottom-12 left-4 w-80 p-7 h-auto flex flex-col items-start justify-between bg-white border rounded-xl shadow-lg'>
           <div className='my-5'>
             {googleUser && <img src={googleUser.imageUrl} alt="Google User" className='w-12 h-12 rounded-full' />}
-            {!googleUser && <VscAccount className='w-12 h-12' />}
+            {profilePicture && <img src={profilePicture} alt='profile-picture' className='w-12 h-12 rounded-full' />}
+            {!googleUser && !profilePicture && <VscAccount className='w-12 h-12' />}
             <p className='text-3xl'><strong>{displayFullName}</strong></p>
             <p>{displayEmail}</p>
           </div>
@@ -266,22 +267,23 @@ function LoginDashBoard() {
               {googleUser ? (
                 <img src={googleUser.imageUrl} alt="Google User" className='w-80 h-80 rounded-full' />
               ) : (
-                uploadedImage ? (
-                  <img src={uploadedImage} alt="Uploadedimg-User" className='w-56 h-56 rounded-full' />
+                profilePicture ? (
+                  <img src={profilePicture} alt="Uploadedimg-User" className='w-56 h-56 rounded-full' />
                 ) : (
                   <VscAccount name='file' className='w-56 h-56 account-icon' />
                 )
               )}
-              {!googleUser?(<div className='flex items-center justify-between mt-7'>
-                <label htmlFor='fileInput' className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200 cursor-pointer'>
-                  REPLACE <LuPencil className='mx-2' />
-                  <input id='fileInput' type='file' name='file' accept='image/*' style={{ display: 'none' }} onChange={handleImageChange} />
-                </label>
-                <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200' onClick={handleRemoveImage}>
-                  REMOVE <MdDeleteOutline className='mx-2' />
-                </button>
-              </div>):null}
-              
+              {!googleUser && (
+                <div className='flex items-center justify-between mt-7'>
+                  <label htmlFor='fileInput' className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200 cursor-pointer'>
+                    REPLACE <LuPencil className='mx-2' />
+                    <input id='fileInput' type='file' name='file' accept='image/*' style={{ display: 'none' }} onChange={handleImageChange} />
+                  </label>
+                  <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200' onClick={handleRemoveImage}>
+                    REMOVE <MdDeleteOutline className='mx-2' />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
