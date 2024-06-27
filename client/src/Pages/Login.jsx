@@ -8,6 +8,7 @@ import axios from 'axios' ;
 import { useNavigate } from 'react-router-dom';
 
 
+
 function Login() {
 
 const [values,setValues]=useState({
@@ -28,9 +29,11 @@ const handleSubmit = async (e) => {
   try {
     const res = await axios.post('http://localhost:5000/api/user/Login', values);
     
-    if (res.data.Status === "Success") {
+    if (res.data.Status ==="Success") {
       alert("Welcome to AudioPress!");
+     
       navigate("/LoginDashboard");
+    
     } else if (res.data.Error === "User not found") {
       alert("User not found!");
     } else if (res.data.Error === "Password Does not match") {

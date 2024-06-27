@@ -18,7 +18,6 @@ function LoginDashBoard() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [googleUser, setGoogleUser] = useState(null);
-  const [uploadedImage, setUploadedImage] = useState(null); // State to store uploaded image
   const [profilePicture, setProfilePicture] = useState('');
 
   const clickOutsideRef = useRef(null);
@@ -50,6 +49,7 @@ function LoginDashBoard() {
     axios.get('http://localhost:5000/api/user/Logout')
       .then(res => {
         navigate('/');
+        localStorage.removeItem('profilePicture');
         window.location.reload(true); // Force reload to clear session
         console.log(res.data);
       })
@@ -81,29 +81,21 @@ function LoginDashBoard() {
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/user/UserDetails", { withCredentials: true });
-        setFullName(res.data.fullname);
-        setEmail(res.data.email);
+        const response = await axios.get("http://localhost:5000/api/user/UserDetails", { withCredentials: true });
+
+        // Assuming response.data structure matches { fullname, email, img_url }
+        const { fullname, email, img_url } = response.data;
+
+        setFullName(fullname);
+        setEmail(email);
+        setProfilePicture(img_url);
       } catch (err) {
-        console.log(err);
+        console.error("Error fetching user details:", err);
+        // Handle error state or logging as needed
       }
     };
 
     fetchUserDetails();
-  }, []);
-
-  useEffect(() => {
-    const fetchProfilePicture = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/user/ProfilePicture", { withCredentials: true });
-        console.log(res);
-        setProfilePicture(res.data.imgUrl);
-      } catch (err) {
-        console.log(err);
-      }
-    };
-
-    fetchProfilePicture();
   }, []);
 
   useEffect(() => {
@@ -150,7 +142,7 @@ function LoginDashBoard() {
       console.error("Error updating user details:", err);
       alert("Error updating user details. Please try again.");
     }
-  }
+  };
 
   const handleGoogleLogout = () => {
     const auth2 = gapi.auth2.getAuthInstance();
@@ -179,17 +171,19 @@ function LoginDashBoard() {
         .then((res) => {
           if (res.status === 201) {
             alert("Profile Picture Updated Successfully");
-            setProfilePicture(res.data.imgUrl); // Update profile picture state with the new image URL
+            // Optionally update profile picture in UI
+            setProfilePicture(res.data.imgUrl);
           }
         })
         .catch((err) => {
-          console.error(err); // Log any errors for debugging
+          console.error("Error uploading profile picture:", err); // Log any errors for debugging
+          // Handle error state or alert user about the error
         });
     }
   };
 
   const handleRemoveImage = () => {
-    setUploadedImage(null); // Clear uploaded image from state
+    setProfilePicture(''); // Clear uploaded image from state
   };
 
   // Render account modal
@@ -249,7 +243,7 @@ function LoginDashBoard() {
                   disabled={!!googleUser}
                 />
               </div>
-              <div className="mt-4 flex flex-col items-center p-4 text-3xl">
+              <div className='p-12 flex flex-col items-center text-3xl'>
                 <label htmlFor='email' className='font-bold'>Your Email</label>
                 <input
                   type='email'
@@ -261,29 +255,40 @@ function LoginDashBoard() {
                   disabled={!!googleUser}
                 />
               </div>
-              {!googleUser && <button className='mt-12 border px-7 py-2 rounded-full bg-red-500 font-semibold text-white hover:bg-red-200' onClick={handleUpdateUser}>SAVE CHANGES</button>}
+              <button
+                type='submit'
+                onClick={handleUpdateUser}
+                className={`bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 ${googleUser ? 'cursor-not-allowed opacity-50' : ''}`}
+                disabled={!!googleUser}
+              >
+                Update
+              </button>
             </div>
-            <div>
-              {googleUser ? (
-                <img src={googleUser.imageUrl} alt="Google User" className='w-80 h-80 rounded-full' />
-              ) : (
-                profilePicture ? (
-                  <img src={profilePicture} alt="Uploadedimg-User" className='w-56 h-56 rounded-full' />
-                ) : (
-                  <VscAccount name='file' className='w-56 h-56 account-icon' />
-                )
-              )}
-              {!googleUser && (
-                <div className='flex items-center justify-between mt-7'>
-                  <label htmlFor='fileInput' className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200 cursor-pointer'>
-                    REPLACE <LuPencil className='mx-2' />
-                    <input id='fileInput' type='file' name='file' accept='image/*' style={{ display: 'none' }} onChange={handleImageChange} />
-                  </label>
-                  <button className='border border-2 px-2 py-2 font-semibold rounded-md bg-white text-black flex items-center hover:bg-slate-200' onClick={handleRemoveImage}>
-                    REMOVE <MdDeleteOutline className='mx-2' />
+            <div className='shadow-xl p-12 rounded-3xl'>
+              <div className='flex flex-col items-center justify-between'>
+                <p className='text-3xl font-bold'>Your Profile Picture</p>
+                {profilePicture ? (
+                  <img src={profilePicture} alt='Profile' className='w-36 h-36 rounded-full' />
+                ) : (<VscAccount className='w-36 h-36' />)}
+                <label htmlFor='fileInput' className='mt-5 p-2 rounded-lg flex flex-col items-center justify-center bg-blue-400'>
+                  <LuPencil className='w-7 h-7' />
+                  <p>Choose a file</p>
+                </label>
+                <input
+                  type='file'
+                  id='fileInput'
+                  className='hidden'
+                  onChange={handleImageChange}
+                />
+                {profilePicture && (
+                  <button
+                    onClick={handleRemoveImage}
+                    className='bg-red-500 text-white mt-5 px-4 py-2 rounded-lg hover:bg-red-600'
+                  >
+                    Remove Image
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -292,7 +297,14 @@ function LoginDashBoard() {
     return null;
   };
 
-  // Render sidebar component
+  const RenderExplore = () => {
+    return (
+      <div className="w-full text-center">
+        Explore News API Integration...
+      </div>
+    );
+  };
+
   const RenderSideBar = () => {
     return (
       <div
@@ -323,16 +335,6 @@ function LoginDashBoard() {
     );
   };
 
-  // Render explore component
-  const RenderExplore = () => {
-    return (
-      <div className="w-full text-center">
-        Explore News API Integration...
-      </div>
-    );
-  };
-
-  // Main render function
   return (
     <div className='Dashboard w-screen h-screen flex relative'>
       {RenderSettingsModal()} {/* Render settings modal */}
@@ -351,7 +353,12 @@ function LoginDashBoard() {
             className='w-7 h-7 rounded-full cursor-pointer account-icon'
             onClick={handleAccountModal}
           />
-        ) : (
+        ) : profilePicture ? (<img
+          src={profilePicture}
+          alt="Google User"
+          className='w-7 h-7 rounded-full cursor-pointer account-icon'
+          onClick={handleAccountModal}
+        />) : (
           <VscAccount className='w-7 h-7 cursor-pointer account-icon' onClick={handleAccountModal} />
         )}
         {RenderAccountShowModal()} {/* Render account modal */}

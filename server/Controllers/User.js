@@ -5,17 +5,15 @@ const cookieParser = require('cookie-parser') ;
 const jwt = require('jsonwebtoken') ; 
 const dotenv = require('dotenv') ; 
 const nodemailer = require("nodemailer") ; 
-const ProfilePictureModel  = require ('../Models/ProfilePic') ; 
 const multer = require('multer')
 const path=require('path')
-const uuid=require('uuid') .v4; 
+
 
 
 
 dotenv.config() ; 
 
 const jwt_secret_key = process.env.JWT_SECRET_KEY ; 
-const mongo_jwt_key=process.env.JWT_MONGO_KEY
 const email_jwt_key  = process.env.EMAIL_SECRET_KEY ; 
 const google_app_password = process.env.GOOGLE_APP_PASSWORD
 
@@ -120,31 +118,32 @@ async function handleLogout(req,res){
     return res.json({Status:"Success"})
 }
 //FETCH USER DETAILS
-async function handleFetchUserDetails(req, res) {
+const handleFetchUserDetails = async (req, res) => {
     const { email } = req.user; // Assuming req.user contains the authenticated user's details
 
     try {
         const dbConnection = await sqlConnection();
-        const getDetailsQuery = 'SELECT fullname, email FROM USER_SIGNUP WHERE email = ?';
-
-        dbConnection.query(getDetailsQuery, [email], (err, data) => {
-            if (err) {
-                console.error("Error fetching details:", err);
-                return res.status(500).json({ error: "Error fetching details" });
-            }
-
-            if (data.length > 0) {
-                const user = data[0];
-                return res.json({ fullname: user.fullname, email: user.email });
-            } else {
-                return res.status(404).json({ error: "User not found" });
-            }
-        });
+        const getDetailsQuery = 'SELECT fullname, email, img_url FROM USER_SIGNUP WHERE email = ?';
+        
+        // Execute the query with email as parameter
+       dbConnection.query(getDetailsQuery,[email],(err,data)=>{
+        if(err){
+            console.error('Error in fetching details !',err) ;
+            return res.status(500).json({error:"Error fetching details"}) ;  
+        }
+        if(data.length>0){
+            const user = data[0] ; 
+            return res.status(200).json({fullname:user.fullname , email:user.email,img_url:user.img_url}) ; 
+        }else {
+            return res.status(404).json({error:"User not found"}) ;
+        }
+       })
     } catch (err) {
-        console.error("Error in fetching details:", err);
-        return res.status(500).json({ error: "Error in fetching details" });
+        console.error("Error fetching details:", err);
+        return res.status(500).json({ error: "Error fetching user details" });
     }
-}
+};
+
 //UPDATE USER DETAILS 
 async function handleUpdateUserDetails(req, res) {
     // Take the current name and email from the request body
@@ -265,64 +264,49 @@ async function handleResetPassword(req, res) {
     }
 }
 // UPLOAD PROFILE PICTURE
-async function handleProfilePictureUpdate(req, res) {
+
+const handleProfilePictureUpdate = async (req, res) => {
+    const {email} = req.user
     try {
-        // Check if file is uploaded
-        if (!req.file) {
-            return res.status(400).json({ error: "Image file is required" });
-        }
-
-        // Construct image URL based on where uploads are stored
-        const imgUrl = `${req.protocol}://${req.get('host')}/upload/images/${req.file.filename}`;
-        const generatedUserId = uuid(); // Generate a random user ID
-
-        // Check if user already has a profile picture in the database
-        let profilePicture = await ProfilePictureModel.findOne({ userId: generatedUserId });
-
-        if (profilePicture) {
-            // Update existing profile picture document with new image URL
-            profilePicture.image = imgUrl;
-            await profilePicture.save();
-        } else {
-            // Create new profile picture document if none exists
-            profilePicture = await ProfilePictureModel.create({
-                userId: generatedUserId,
-                image: imgUrl
-            });
-        }
-
-        console.log("Profile Picture saved:", imgUrl, profilePicture);
-
-        return res.status(201).json({ message: "Profile Picture Updated successfully", imgUrl });
+      // Check if file is uploaded
+      if (!req.file) {
+        return res.status(400).json({ error: "Image file is required" });
+      }
+  
+      // Construct image URL based on where uploads are stored
+      const imgUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
+  
+      // Check if user email is available in req.user
+      const userEmail = email ; 
+      console.log(userEmail)
+      if (!userEmail) {
+        return res.status(400).json({ error: "User email is required" });
+      }
+  
+      // Database connection
+      const dbConnection = await sqlConnection();
+  
+      // Update img_url in the database using email
+      const updateQuery = 'UPDATE USER_SIGNUP SET img_url = ? WHERE email = ?';
+       await dbConnection.query(updateQuery, [imgUrl, userEmail]);
+  
+      // Check if any rows were updated
+     
+  
+      return res.status(201).json({ message: "Profile Picture Updated successfully", imgUrl });
     } catch (err) {
-        console.error("Error uploading profile picture:", err);
-        return res.status(500).json({ error: "Failed to update profile picture" });
-    }
-}
-// GET PROFILE PICTURE
-// Assuming req.mongouser.userId is set somewhere before calling handleGetProfilePicture
-async function handleGetProfilePicture(req, res) {
-    try {
-        // Check if userId is present in the request
-        if (!req || !req.mongouser || !req.mongouser.userId) {
-            return res.status(400).json({ error: "User ID is missing or invalid" });
-        }
+      console.error("Error uploading profile picture:", err);
+      return res.status(500).json({ error: "Failed to update profile picture" });
+    } 
+  };
+  
+  
+  
+ 
+  
 
-        // Retrieve the user's profile picture document from MongoDB based on user ID
-        const profilePicture = await ProfilePictureModel.findOne({ userId: req.mongouser.userId });
 
-        if (!profilePicture) {
-            return res.status(404).json({ error: "Profile Picture not found" });
-        }
 
-        console.log("Profile Picture fetched:", profilePicture.image);
-
-        return res.status(200).json({ imgUrl: profilePicture.image });
-    } catch (err) {
-        console.error("Error fetching profile picture:", err);
-        return res.status(500).json({ error: "Unable to fetch profile picture" });
-    }
-}
 
 
 
@@ -337,5 +321,5 @@ module.exports = {
     handleForgotPassword,
     handleResetPassword,
     handleProfilePictureUpdate,
-    handleGetProfilePicture
+
 };

@@ -11,11 +11,10 @@ const {handleUpdateUserDetails} = require('../Controllers/User')
 const {handleForgotPassword} = require('../Controllers/User')
 const {handleResetPassword} = require('../Controllers/User')
 const {handleProfilePictureUpdate} = require('../Controllers/User')
-const {handleGetProfilePicture} = require('../Controllers/User')
+
 
 //middlewares
 const {verifytoken} = require('../Middlewares/User') ; 
-// const {verifyMongoToken} = require('../Middlewares/User') ; 
 const {upload} = require('../Middlewares/MulterConfig') ; 
 
 
@@ -26,7 +25,7 @@ const router = express.Router() ;
 router.get('/',handleServer) ; 
 router.get('/Logout',handleLogout)
 router.get('/UserDetails', verifytoken, handleFetchUserDetails) 
-router.get('/ProfilePicture',handleGetProfilePicture)
+
 
 
 //POST ROUTES
@@ -34,7 +33,7 @@ router.post('/Register',handleSignup)
 router.post('/Login',handleLogin)
 router.post('/ForgotPassword',handleForgotPassword)
 router.post('/ResetPassword/:token',handleResetPassword)
-router.post('/ProfilePictureUpdate',upload.single('file'),handleProfilePictureUpdate)
+router.post('/ProfilePictureUpdate',verifytoken,upload.single('file'),handleProfilePictureUpdate)
 
 //DELETE ROUTES 
 
