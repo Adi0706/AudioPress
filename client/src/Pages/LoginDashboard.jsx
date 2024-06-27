@@ -316,7 +316,7 @@ function LoginDashBoard() {
           <li className='font-bold flex items-center mb-5'>
             <img src={Logo} alt="logo" className='w-5 h-5 mx-2 cursor-pointer' />Explore News
           </li>
-          <li className='flex items-center mb-5'><MdKeyboardVoice className='mr-2' />VoicePress AI</li>
+          <li className='flex items-center mb-5'><MdKeyboardVoice className='mr-2' />AudioPress AI</li>
           <li>
             <div className='space-y-2 '>
               <p className='cursor-pointer hover:text-blue-300 '>Politics</p>
@@ -364,7 +364,7 @@ function LoginDashBoard() {
         {RenderAccountShowModal()} {/* Render account modal */}
       </div>
       {showSidebar && <RenderSideBar />} {/* Render sidebar if showSidebar is true */}
-      <div className='Dashboard-main w-full flex flex-col items-center justify-center'>
+      <div className='Dashboard-main p-5 w-full flex flex-col items-center justify-center'>
         <h1 className='text-5xl font-bold'>Your News Feed</h1>
         <p className='my-5 text-lg'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
         <div className='flex gap-8'>
@@ -372,7 +372,7 @@ function LoginDashBoard() {
           <p className='font-semibold text-black hover:text-gray-500 cursor-pointer' onClick={handleShowExplore}>Explore</p>
         </div>
         <div className='w-2/4 border-b border-gray-300 my-5'></div>
-        {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-3/5 rounded-full mt-12 shadow-xl' />}
+        {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-4/5' />}
       </div>
     </div>
   );
