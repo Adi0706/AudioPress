@@ -15,7 +15,7 @@ const {handleDeleteProfilePicture} = require('../Controllers/User') ;
 
 //middlewares
 const {verifytoken} = require('../Middlewares/User') ; 
-const {upload} = require('../Middlewares/MulterConfig') ; 
+const upload = require('../Middlewares/MulterConfig') ; 
 
 
 const router = express.Router() ; 

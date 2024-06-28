@@ -24,7 +24,7 @@ app.use(cors({
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 app.use(bodyParser.json({ limit: '10mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/upload', express.static(path.join(__dirname, 'upload')));
 
 // API endpoints
 app.use('/api/user', UserRoutes);

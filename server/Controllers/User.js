@@ -160,7 +160,7 @@ async function handleUpdateUserDetails(req, res) {
         const dbConnection = await sqlConnection();
 
         // SQL query to update the user details
-        const updateSqlQuery = 'UPDATE USER_SIGNUP SET fullname = ?, email = ? WHERE id = ?';
+        const updateSqlQuery = 'UPDATE USER_SIGNUP SET fullname = ?, email = ? WHERE id = ?' ;
         const values = [fullname, email, req.user._id]; // Assuming req.user.id contains the user's ID
 
         // Execute the query
@@ -266,6 +266,7 @@ async function handleResetPassword(req, res) {
 }
 // UPLOAD PROFILE PICTURE
 
+
 async function  handleProfilePictureUpdate(req,res) {
     const {email} = req.user
     try {
@@ -275,7 +276,7 @@ async function  handleProfilePictureUpdate(req,res) {
       }
   
       // Construct image URL based on where uploads are stored
-      const imgUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
+      const imgUrl = `${req.protocol}://${req.get('host')}/upload/images/${req.file.filename}`;
   
       // Check if user email is available in req.user
       const userEmail = email ; 
@@ -300,7 +301,6 @@ async function  handleProfilePictureUpdate(req,res) {
       return res.status(500).json({ error: "Failed to update profile picture" });
     } 
   };
-  
   //DELETE PROFILE PICTURE
   async function handleDeleteProfilePicture(req, res) {
     const { email } = req.user; // Ensure req.user contains the decoded token with email

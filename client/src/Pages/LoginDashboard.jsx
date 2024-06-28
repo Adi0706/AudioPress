@@ -6,7 +6,6 @@ import { MdKeyboardVoice } from "react-icons/md";
 import NewsImage from '../Media/dashboard-img.png'; // Assuming this is an image for the dashboard
 import { Link, useNavigate } from 'react-router-dom';
 import { LuXCircle, LuPencil } from "react-icons/lu";
-import { MdDeleteOutline } from "react-icons/md";
 import axios from 'axios';
 import { gapi } from 'gapi-script'; // Assuming you're using Google API for authentication
 
@@ -18,7 +17,9 @@ function LoginDashBoard() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [googleUser, setGoogleUser] = useState(null);
-  const [profilePicture, setProfilePicture] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
+
+
 
   const clickOutsideRef = useRef(null);
   const navigate = useNavigate();
@@ -161,26 +162,31 @@ function LoginDashBoard() {
     const file = e.target.files[0];
     if (file) {
       const formData = new FormData();
-      formData.append('file', file);
-
+      formData.append('file', file); 
+      
       axios.post("http://localhost:5000/api/user/ProfilePictureUpdate", formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       })
-        .then((res) => {
-          if (res.status === 201) {
-            alert("Profile Picture Updated Successfully");
-            // Optionally update profile picture in UI
-            setProfilePicture(res.data.imgUrl);
-          }
-        })
-        .catch((err) => {
-          console.error("Error uploading profile picture:", err); // Log any errors for debugging
-          // Handle error state or alert user about the error
-        });
+      .then((res) => {
+        if (res.status === 201) {
+          alert("Profile Picture Updated Successfully");
+          setProfilePicture(res.data.imgUrl); // Assuming setProfilePicture is correctly defined
+        }
+      })
+      .catch((err) => {
+        console.error("Error uploading profile picture:", err);
+        // Handle error state or alert user about the error
+      });
     }
   };
+  
+  useEffect(() => {
+    console.log("Profile picture updated:", profilePicture);
+  }, [profilePicture]);
+
+
   const handleRemoveImage = async () => {
     try {
       const res = await axios.delete('http://localhost:5000/api/user/DelProfilePic', { withCredentials: true });
@@ -203,12 +209,18 @@ function LoginDashBoard() {
     if (showAccountModal) {
       const displayFullName = googleUser ? googleUser.fullName : fullName;
       const displayEmail = googleUser ? googleUser.email : email;
-
+  
       return (
         <div ref={clickOutsideRef} className='absolute bottom-12 left-4 w-80 p-7 h-auto flex flex-col items-start justify-between bg-white border rounded-xl shadow-lg'>
           <div className='my-5'>
-            {googleUser && <img src={googleUser.imageUrl} alt="Google User" className='w-12 h-12 rounded-full' />}
-            {profilePicture && <img src={profilePicture} alt='profile-picture' className='w-12 h-12 rounded-full' />}
+            {googleUser && <img src={googleUser.imageUrl} alt="Google User" className='w-12 h-12 rounded-full object-cover' />}
+            {( profilePicture) && 
+              <img 
+                src={ profilePicture} 
+                alt='profile-picture' 
+                className='w-12 h-12 rounded-full object-cover' 
+              />
+            }
             {!googleUser && !profilePicture && <VscAccount className='w-12 h-12' />}
             <p className='text-3xl'><strong>{displayFullName}</strong></p>
             <p>{displayEmail}</p>
@@ -226,7 +238,6 @@ function LoginDashBoard() {
     }
     return null;
   };
-
   // Render settings modal
   const RenderSettingsModal = () => {
     if (settingsModal) {
@@ -287,11 +298,13 @@ function LoginDashBoard() {
                   <p>Choose a file</p>
                 </label>
                 <input
-                  type='file'
-                  id='fileInput'
-                  className='hidden'
-                  onChange={handleImageChange}
-                />
+  type='file'
+  accept=".png, .jpg, .jpeg"
+  id='fileInput'
+  className='hidden'
+  onChange={handleImageChange}
+/>
+
                 {profilePicture && (
                   <button
                     onClick={handleRemoveImage}
@@ -308,7 +321,6 @@ function LoginDashBoard() {
     }
     return null;
   };
-
   const RenderExplore = () => {
     return (
       <div className="w-full text-center">
@@ -362,15 +374,17 @@ function LoginDashBoard() {
           <img
             src={googleUser.imageUrl}
             alt="Google User"
-            className='w-7 h-7 rounded-full cursor-pointer account-icon'
+            className='w-7 h-7 rounded-full cursor-pointer account-icon object-cover'
             onClick={handleAccountModal}
           />
-        ) : profilePicture ? (<img
-          src={profilePicture}
-          alt="Google User"
-          className='w-7 h-7 rounded-full cursor-pointer account-icon'
-          onClick={handleAccountModal}
-        />) : (
+        ) : ( profilePicture) ? (
+          <img
+            src={profilePicture}
+            alt="User Profile"
+            className='w-7 h-7 rounded-full cursor-pointer account-icon object-cover'
+            onClick={handleAccountModal}
+          />
+        ) : (
           <VscAccount className='w-7 h-7 cursor-pointer account-icon' onClick={handleAccountModal} />
         )}
         {RenderAccountShowModal()} {/* Render account modal */}
