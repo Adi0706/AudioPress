@@ -265,8 +265,6 @@ async function handleResetPassword(req, res) {
     }
 }
 // UPLOAD PROFILE PICTURE
-
-
 async function  handleProfilePictureUpdate(req,res) {
     const {email} = req.user
     try {
