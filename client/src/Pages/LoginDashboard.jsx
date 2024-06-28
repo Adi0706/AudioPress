@@ -181,10 +181,22 @@ function LoginDashBoard() {
         });
     }
   };
-
-  const handleRemoveImage = () => {
-    setProfilePicture(''); // Clear uploaded image from state
+  const handleRemoveImage = async () => {
+    try {
+      const res = await axios.delete('http://localhost:5000/api/user/DelProfilePic', { withCredentials: true });
+      if (res.status === 200) {
+        alert("Profile Picture Removed Successfully");
+        setProfilePicture('');
+      } else {
+        alert("Failed to remove profile picture. Please try again.");
+      }
+    } catch (err) {
+      console.error("Error removing profile picture:", err);
+      alert("An error occurred while removing the profile picture. Please try again.");
+    }
   };
+  
+  
 
   // Render account modal
   const RenderAccountShowModal = () => {

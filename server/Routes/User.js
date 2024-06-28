@@ -11,7 +11,7 @@ const {handleUpdateUserDetails} = require('../Controllers/User')
 const {handleForgotPassword} = require('../Controllers/User')
 const {handleResetPassword} = require('../Controllers/User')
 const {handleProfilePictureUpdate} = require('../Controllers/User')
-
+const {handleDeleteProfilePicture} = require('../Controllers/User') ; 
 
 //middlewares
 const {verifytoken} = require('../Middlewares/User') ; 
@@ -36,7 +36,7 @@ router.post('/ResetPassword/:token',handleResetPassword)
 router.post('/ProfilePictureUpdate',verifytoken,upload.single('file'),handleProfilePictureUpdate)
 
 //DELETE ROUTES 
-
+router.delete('/DelProfilePic',verifytoken,handleDeleteProfilePicture) ; 
 
 //PUT-UPADTE ROUTES 
 router.put('/Update',verifytoken,handleUpdateUserDetails)

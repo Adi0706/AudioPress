@@ -6,7 +6,8 @@ const jwt = require('jsonwebtoken') ;
 const dotenv = require('dotenv') ; 
 const nodemailer = require("nodemailer") ; 
 const multer = require('multer')
-const path=require('path')
+const path=require('path');
+const { error } = require('console');
 
 
 
@@ -265,7 +266,7 @@ async function handleResetPassword(req, res) {
 }
 // UPLOAD PROFILE PICTURE
 
-const handleProfilePictureUpdate = async (req, res) => {
+async function  handleProfilePictureUpdate(req,res) {
     const {email} = req.user
     try {
       // Check if file is uploaded
@@ -300,6 +301,30 @@ const handleProfilePictureUpdate = async (req, res) => {
     } 
   };
   
+  //DELETE PROFILE PICTURE
+  async function handleDeleteProfilePicture(req, res) {
+    const { email } = req.user; // Ensure req.user contains the decoded token with email
+  
+    try {
+      const dbConnection = await sqlConnection(); // Ensure this function is correctly implemented and returns a valid connection
+  
+      const deleteProfilePicQuery = 'UPDATE USER_SIGNUP SET img_url = NULL WHERE email = ?';
+      
+      dbConnection.query(deleteProfilePicQuery, [email], (err, data) => {
+        if (err) {
+          console.error("Error executing query:", err);
+          return res.status(400).json({ error: "Unable to delete profile picture!" });
+        }
+        return res.status(200).json({ message: "Profile picture deleted successfully!" });
+      });
+  
+      // Ensure proper cleanup of dbConnection if needed, e.g., dbConnection.release() or dbConnection.end()
+      
+    } catch (err) {
+      console.error("Internal server error:", err);
+      return res.status(500).json({ error: "Internal Server Error!" });
+    }
+  }
   
   
  
@@ -321,5 +346,6 @@ module.exports = {
     handleForgotPassword,
     handleResetPassword,
     handleProfilePictureUpdate,
+    handleDeleteProfilePicture,
 
 };
