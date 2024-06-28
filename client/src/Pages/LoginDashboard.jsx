@@ -394,8 +394,8 @@ function LoginDashBoard() {
         <h1 className='text-5xl font-bold'>Your News Feed</h1>
         <p className='my-5 text-lg'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
         <div className='flex gap-8'>
-          <p className='font-semibold text-black hover:text-gray-500 cursor-pointer' onClick={handleFeed}>Feed</p>
-          <p className='font-semibold text-black hover:text-gray-500 cursor-pointer' onClick={handleShowExplore}>Explore</p>
+        <p className='font-semibold text-black hover:text-gray-500 cursor-pointer mx-12' onClick={handleFeed}>Feed</p>
+        <p className='font-semibold text-black hover:text-gray-500 cursor-pointer mx-2' onClick={handleShowExplore}>Explore</p>
         </div>
         <div className='w-2/4 border-b border-gray-300 my-5'></div>
         {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-4/5' />}
