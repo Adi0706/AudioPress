@@ -1,16 +1,14 @@
-const multer = require('multer');
 const path = require('path');
+const multer = require('multer');
+const uploadDir = process.env.UPLOAD_DIR || './upload/images';
 
 const storage = multer.diskStorage({
-  destination: './upload/images',
+  destination: uploadDir,
   filename: (req, file, cb) => {
     cb(null, `${file.fieldname}_${Date.now()}${path.extname(file.originalname)}`);
   }
 });
 
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB file size limit
-});
+const upload = multer({ storage: storage });
 
 module.exports = upload;
