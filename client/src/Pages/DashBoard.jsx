@@ -11,13 +11,12 @@ import { CategoryData } from '../filterData';
 
 function DashBoard() {
   const [showSidebar, setShowSideBar] = useState(false);
-  const [showExplore, setShowExplore] = useState(true); // Show explore by default
+  const [showExplore, setShowExplore] = useState(false); // Show explore by default
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [filterCountry, setFilterCountry] = useState('in'); // Default country
   const [filterCategory, setFilterCategory] = useState('general'); // Default category
   const [newsData, setNewsData] = useState([]);
   
- 
   const navigate = useNavigate();
 
   const handleShowSideBar = () => {
@@ -47,7 +46,7 @@ function DashBoard() {
   const RenderAccountShowModal = () => {
     if (showAccountModal) {
       return (
-        <div className='absolute bottom-12 left-4 w-80 p-5 h-36 bg-white border rounded-xl shadow-lg'>
+        <div className='absolute bottom-12 left-4 w-80 p-5 h-36 bg-white border rounded-xl shadow-lg z-50'>
           <p><b>Login to access the voice assistant</b></p>
           <button className='border px-12 p-2 font-bold rounded-full my-12 text-white bg-red-600 hover:bg-red-300' onClick={handleNavigateLogin}>Log In</button>
         </div>
@@ -71,7 +70,7 @@ function DashBoard() {
     };
   }, []);
 
-  //function to fetch the news based on api hit
+  // Function to fetch the news based on API hit
   const fetchNews = useCallback(async () => {
     if (filterCountry && filterCategory) {
       try {
@@ -79,19 +78,20 @@ function DashBoard() {
           filterCategory,
           filterCountry,
         });
-        setNewsData(response.data.articles);
+        const articles = response.data.articles || [];
+        setNewsData(Array.isArray(articles) ? articles : []);
       } catch (error) {
         console.error("Error fetching the news data:", error);
       }
     }
   }, [filterCountry, filterCategory]);
   
-  //useEffect hook to fetch the new news based on the filters
+  // useEffect hook to fetch the new news based on the filters
   useEffect(() => {
     fetchNews();
   }, [fetchNews]);
   
-  //making sure the old data is removed and new data is showm when filters are changed
+  // Making sure the old data is removed and new data is shown when filters are changed
   useEffect(() => {
     setNewsData([]);
   }, [filterCountry, filterCategory]);
@@ -99,7 +99,7 @@ function DashBoard() {
   const RenderSideBar = () => {
     return (
       <div
-        className='w-56 h-screen border-r flex flex-col items-center p-5 justify-between bg-white animate-slideIn'
+        className='w-56 h-screen border-r flex flex-col items-center p-5 justify-between bg-white'
         onMouseEnter={handleShowSideBar}
         onMouseLeave={handleCloseSideBar}
       >
@@ -133,33 +133,28 @@ function DashBoard() {
 
   const RenderExplore = () => {
     return (
-      <div className='news-container explore-scroll-container h-full overflow-y-auto'>
+      <div className='news-container explore-scroll-container h-full overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
         {newsData.length ? (
           newsData.map((news, index) => (
-            <div key={index} className='news-item p-4 border rounded-lg shadow-lg flex flex-col'>
+            <div key={index} className='news-item p-4 border rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105'>
               {news.urlToImage && (
-                <img src={news.urlToImage} alt={news.title} className='w-full h-48 object-cover mb-4' />
+                <img src={news.urlToImage} alt={news.title} className='w-full h-48 object-cover mb-4 rounded-lg' />
               )}
               <h2 className='text-xl font-bold mb-2'>{news.title}</h2>
-              <p className='text-sm mb-2'>{news.description}</p>
               <a href={news.url} target="_blank" rel="noopener noreferrer" className='text-blue-500 hover:underline'>Read more</a>
             </div>
           ))
         ) : (
-          <p>No news available. Please select a category and country.</p>
+          <p className='text-center'>No news available. Please select a category and country.</p>
         )}
-       
       </div>
     );
   };
-
+  
   return (
     <>
       <div className='Dashboard w-screen h-screen flex'>
-        <div
-          className='w-12 h-screen border-r flex flex-col items-start p-2 justify-between'
-          onMouseLeave={handleCloseSideBar}
-        >
+        <div className='w-12 h-screen border-r flex flex-col items-start p-2 justify-between' onMouseLeave={handleCloseSideBar}>
           <div>
             <Link to='/'>
               <img src={Logo} alt="logo" className='w-7 cursor-pointer' />
@@ -171,14 +166,18 @@ function DashBoard() {
         </div>
         {showSidebar && <RenderSideBar />}
         <div className='Dashboard-main p-5 w-full flex flex-col items-center'>
-          <h1 className='text-5xl font-bold'>Your News Feed</h1>
-          <p className='my-5 text-lg'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
-          <span className='flex items-center justify-center'>
-            <p className='font-semibold text-black hover:text-gray-500 cursor-pointer mx-12' onClick={handleFeed}>Feed</p>
-            <p className='font-semibold text-black hover:text-gray-500 cursor-pointer mx-2' onClick={handleShowExplore}>Explore</p>
-          </span>
+          <h1 className='text-5xl font-bold text-center mb-8'>Your News Feed</h1>
+          <p className='text-lg text-center mb-8'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
+          <div className='flex justify-center mb-4'>
+            <button onClick={handleFeed} className={`text-lg font-semibold mx-4 cursor-pointer ${!showExplore ? 'text-gray-600' : 'text-black hover:text-gray-500'}`}>Feed</button>
+            <button onClick={handleShowExplore} className={`text-lg font-semibold mx-4 cursor-pointer ${showExplore ? 'text-gray-600' : 'text-black hover:text-gray-500'}`}>Explore</button>
+          </div>
           <div className='w-2/4 border-b border-gray-300 my-5'></div>
-          {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-4/5 ' />}
+          {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-4/5 mb-8' />}
+          <span className='flex items-center justify-center'>
+            <p className='font-semibold text-lg text-center mx-4'>Category: {filterCategory}</p>
+            <p className='font-semibold text-lg text-center mx-4'>Country: {filterCountry}</p>
+          </span>
         </div>
       </div>
     </>
