@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState,useCallback } from 'react';
 import Logo from '../Media/LandingPage/Logo.png'; // Assuming this is your project's logo
 import { VscAccount } from 'react-icons/vsc';
 import { FaSearch } from 'react-icons/fa';
@@ -8,6 +8,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { LuXCircle, LuPencil } from "react-icons/lu";
 import axios from 'axios';
 import { gapi } from 'gapi-script'; // Assuming you're using Google API for authentication
+import { CountryData } from '../filterData';
+import { CategoryData } from '../filterData';
 
 function LoginDashBoard() {
   const [showSidebar, setShowSideBar] = useState(false);
@@ -18,6 +20,9 @@ function LoginDashBoard() {
   const [email, setEmail] = useState('');
   const [googleUser, setGoogleUser] = useState(null);
   const [profilePicture, setProfilePicture] = useState(null);
+  const [filterCountry, setFilterCountry] = useState('in'); // Default country
+  const [filterCategory, setFilterCategory] = useState('general'); // Default category
+  const [newsData, setNewsData] = useState([]);
 
 
 
@@ -321,18 +326,57 @@ function LoginDashBoard() {
     }
     return null;
   };
+
+  // fetching news 
+
+  const fetchNews = useCallback(async () => {
+    if (filterCountry && filterCategory) {
+      try {
+        const response = await axios.post('http://localhost:5000/api/news/getNews', {
+          filterCategory,
+          filterCountry,
+        });
+        const articles = response.data.articles || [];
+        setNewsData(Array.isArray(articles) ? articles : []);
+      } catch (error) {
+        console.error("Error fetching the news data:", error);
+      }
+    }
+  }, [filterCountry, filterCategory]);
+  
+  
+  useEffect(() => {
+    fetchNews();
+  }, [fetchNews]);
+  
+  
+  useEffect(() => {
+    setNewsData([]);
+  }, [filterCountry, filterCategory]);
+
   const RenderExplore = () => {
     return (
-      <div className="w-full text-center">
-        Explore News API Integration...
+      <div className='news-container explore-scroll-container h-full overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        {newsData.length ? (
+          newsData.map((news, index) => (
+            <div key={index} className='news-item p-4 border rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105'>
+              {news.urlToImage && (
+                <img src={news.urlToImage} alt={news.title} className='w-full h-48 object-cover mb-4 rounded-lg' />
+              )}
+              <h2 className='text-xl font-bold mb-2'>{news.title}</h2>
+              <a href={news.url} target="_blank" rel="noopener noreferrer" className='text-blue-500 hover:underline'>Read more</a>
+            </div>
+          ))
+        ) : (
+          <p className='text-center'>No news available. Please select a category and country.</p>
+        )}
       </div>
     );
   };
-
   const RenderSideBar = () => {
     return (
       <div
-        className='w-56 h-screen border-r flex flex-col items-center p-5 justify-between bg-white animate-slideIn'
+        className='w-56 h-screen border-r flex flex-col items-center p-5 justify-between bg-white'
         onMouseEnter={handleShowSideBar}
         onMouseLeave={handleCloseSideBar}
       >
@@ -340,18 +384,23 @@ function LoginDashBoard() {
           <li className='font-bold flex items-center mb-5'>
             <img src={Logo} alt="logo" className='w-5 h-5 mx-2 cursor-pointer' />Explore News
           </li>
-          <li className='flex items-center mb-5'><MdKeyboardVoice className='mr-2' />AudioPress AI</li>
+          <li className='flex items-center mb-5'><MdKeyboardVoice className='mr-2 w-7 h-7 hover:text-blue-300 cursor-pointer' />AudioPress AI</li>
           <li>
             <div className='space-y-2 '>
-              <p className='cursor-pointer hover:text-blue-300 '>Politics</p>
-              <p className='cursor-pointer hover:text-blue-300'>Business</p>
-              <p className='cursor-pointer hover:text-blue-300'>Technology</p>
-              <p className='cursor-pointer hover:text-blue-300'>Entertainment</p>
-              <p className='cursor-pointer hover:text-blue-300'>Sports</p>
-              <p className='cursor-pointer hover:text-blue-300'>Health</p>
-              <p className='cursor-pointer hover:text-blue-300'>Science</p>
-              <p className='cursor-pointer hover:text-blue-300'>Education</p>
-              <p className='cursor-pointer hover:text-blue-300'>Environment</p>
+              <strong>CATEGORIES</strong>
+              {CategoryData.map((item, index) => (
+                <p key={index} className='cursor-pointer hover:text-blue-300' onClick={() => setFilterCategory(item.name)}>
+                  {item.name}
+                </p>
+              ))}
+            </div>
+            <div className='space-y-2 my-12'>
+              <strong>COUNTRY</strong>
+              {CountryData.map((item, index) => (
+                <p key={index} className='cursor-pointer hover:text-blue-300' onClick={() => setFilterCountry(item.code)}>
+                  {item.name} <strong>({item.code})</strong>
+                </p>
+              ))}
             </div>
           </li>
         </ul>
@@ -389,17 +438,21 @@ function LoginDashBoard() {
         )}
         {RenderAccountShowModal()} {/* Render account modal */}
       </div>
-      {showSidebar && <RenderSideBar />} {/* Render sidebar if showSidebar is true */}
-      <div className='Dashboard-main p-5 w-full flex flex-col items-center justify-center'>
-        <h1 className='text-5xl font-bold'>Your News Feed</h1>
-        <p className='my-5 text-lg'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
-        <div className='flex gap-8'>
-        <p className='font-semibold text-black hover:text-gray-500 cursor-pointer mx-12' onClick={handleFeed}>Feed</p>
-        <p className='font-semibold text-black hover:text-gray-500 cursor-pointer mx-2' onClick={handleShowExplore}>Explore</p>
+      {showSidebar && <RenderSideBar />}
+        <div className='Dashboard-main p-5 w-full flex flex-col items-center'>
+          <h1 className='text-5xl font-bold text-center mb-8'>Your News Feed</h1>
+          <p className='text-lg text-center mb-8'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
+          <div className='flex justify-center mb-4'>
+            <button onClick={handleFeed} className={`text-lg font-semibold mx-4 cursor-pointer ${!showExplore ? 'text-gray-600' : 'text-black hover:text-gray-500'}`}>Feed</button>
+            <button onClick={handleShowExplore} className={`text-lg font-semibold mx-4 cursor-pointer ${showExplore ? 'text-gray-600' : 'text-black hover:text-gray-500'}`}>Explore</button>
+          </div>
+          <div className='w-2/4 border-b border-gray-300 my-5'></div>
+          {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-4/5 mb-8' />}
+          <span className='flex items-center justify-center'>
+            <p className='font-semibold text-lg text-center mx-4'>Category: {filterCategory}</p>
+            <p className='font-semibold text-lg text-center mx-4'>Country: {filterCountry}</p>
+          </span>
         </div>
-        <div className='w-2/4 border-b border-gray-300 my-5'></div>
-        {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-4/5' />}
-      </div>
     </div>
   );
 }
