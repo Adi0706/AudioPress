@@ -16,8 +16,8 @@ function DashBoard() {
   const [filterCountry, setFilterCountry] = useState('in'); // Default country
   const [filterCategory, setFilterCategory] = useState('general'); // Default category
   const [newsData, setNewsData] = useState([]);
-  const [page, setPage] = useState(1); // Add state for pagination
-  const [loading, setLoading] = useState(false); // Add state for loading
+  
+ 
   const navigate = useNavigate();
 
   const handleShowSideBar = () => {
@@ -71,40 +71,31 @@ function DashBoard() {
     };
   }, []);
 
+  //function to fetch the news based on api hit
   const fetchNews = useCallback(async () => {
     if (filterCountry && filterCategory) {
-      setLoading(true);
       try {
-        const response = await axios.get(`https://newsapi.org/v2/top-headlines`, {
-          params: {
-            country: filterCountry,
-            category: filterCategory,
-            apiKey: '790cccf9efb645739bd5114226e62acc',
-            page: page,
-            pageSize: 10,
-          }
+        const response = await axios.post('http://localhost:5000/api/news/getNews', {
+          filterCategory,
+          filterCountry,
         });
-        setNewsData(prevNewsData => [...prevNewsData, ...response.data.articles]);
+        setNewsData(response.data.articles);
       } catch (error) {
         console.error("Error fetching the news data:", error);
       }
-      setLoading(false);
     }
-  }, [filterCountry, filterCategory, page]);
-
+  }, [filterCountry, filterCategory]);
+  
+  //useEffect hook to fetch the new news based on the filters
   useEffect(() => {
     fetchNews();
   }, [fetchNews]);
-
+  
+  //making sure the old data is removed and new data is showm when filters are changed
   useEffect(() => {
-    setPage(1); // Reset page when filters change
     setNewsData([]);
   }, [filterCountry, filterCategory]);
-
-  const handleLoadMore = () => {
-    setPage(prevPage => prevPage + 1);
-  };
-
+  
   const RenderSideBar = () => {
     return (
       <div
@@ -157,15 +148,7 @@ function DashBoard() {
         ) : (
           <p>No news available. Please select a category and country.</p>
         )}
-        {loading && <p>Loading more news...</p>}
-        {!loading && newsData.length > 0 && (
-          <button 
-            className='border px-12 p-2 font-bold rounded-full my-12 text-white bg-red-400 hover:bg-blue-300'
-            onClick={handleLoadMore}
-          >
-            Load More
-          </button>
-        )}
+       
       </div>
     );
   };

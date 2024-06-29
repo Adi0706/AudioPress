@@ -26,8 +26,6 @@ router.get('/',handleServer) ;
 router.get('/Logout',handleLogout)
 router.get('/UserDetails', verifytoken, handleFetchUserDetails) 
 
-
-
 //POST ROUTES
 router.post('/Register',handleSignup)
 router.post('/Login',handleLogin)

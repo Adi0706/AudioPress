@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const UserRoutes = require('./Routes/User');
+const NewsRoutes = require('./Routes/News')
 const { sqlConnection } = require('./Connection/sqlConnection');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
@@ -28,6 +29,7 @@ app.use('/upload', express.static(path.join(__dirname, 'upload')));
 
 // API endpoints
 app.use('/api/user', UserRoutes);
+app.use('/api/news',NewsRoutes)  ; 
 
 // Server start
 app.listen(PORT, () => {
