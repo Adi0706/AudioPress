@@ -3,8 +3,10 @@ const LRUCache = require('../Utils/LRUCache');
 
 dotenv.config();
 
-const cache = new LRUCache(100); // Initialize the cache with capacity
+const cache = new LRUCache(100); 
 
+
+//FETCHING NEWS FROM NEWS API 
 async function handleFetchNews(req, res) {
     const { filterCategory, filterCountry } = req.body;
     const cacheKey = `${filterCategory}_${filterCountry}`;
