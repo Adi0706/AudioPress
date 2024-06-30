@@ -228,7 +228,7 @@ function LoginDashBoard() {
       const displayEmail = googleUser ? googleUser.email : email;
   
       return (
-        <div ref={clickOutsideRef} className='absolute bottom-12 left-4 w-80 p-7 h-auto flex flex-col items-start justify-between bg-white border rounded-xl shadow-lg'>
+        <div ref={clickOutsideRef} className='absolute bottom-12 left-4 w-80 z-50 p-7 h-auto flex flex-col items-start justify-between bg-white border rounded-xl shadow-lg'>
           <div className='my-5'>
             {googleUser && <img src={googleUser.imageUrl} alt="Google User" className='w-12 h-12 rounded-full object-cover' />}
             {( profilePicture) && 
@@ -262,7 +262,7 @@ function LoginDashBoard() {
       const displayEmail = googleUser ? googleUser.email : email;
 
       return (
-        <div className='absolute h-screen w-screen shadow-xl bg-white'>
+        <div className='absolute h-screen w-screen shadow-xl bg-white z-50'>
           <div className='flex items-center justify-between p-5'>
             <p className='text-5xl font-bold'>Your Profile<br />
               <span className='text-lg font-semibold text-gray-500 ml-2'>MANAGE YOUR PROFILE</span>
@@ -307,9 +307,10 @@ function LoginDashBoard() {
             <div className='shadow-xl p-12 rounded-3xl'>
               <div className='flex flex-col items-center justify-between'>
                 <p className='text-3xl font-bold'>Your Profile Picture</p>
-                {profilePicture ? (
+                {googleUser?(<img src={googleUser.imageUrl} alt='Profile' className='w-36 h-36 rounded-full' />):  profilePicture ? (
                   <img src={profilePicture} alt='Profile' className='w-36 h-36 rounded-full' />
                 ) : (<VscAccount className='w-36 h-36' />)}
+               
                 <label htmlFor='fileInput' className='mt-5 p-2 rounded-lg flex flex-col items-center justify-center bg-blue-400'>
                   <LuPencil className='w-7 h-7' />
                   <p>Choose a file</p>
