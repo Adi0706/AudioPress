@@ -23,6 +23,8 @@ function LoginDashBoard() {
   const [filterCountry, setFilterCountry] = useState('in'); // Default country
   const [filterCategory, setFilterCategory] = useState('general'); // Default category
   const [newsData, setNewsData] = useState([]);
+  const [showNewsModal, setShowNewsModal] = useState(false);
+  const [selectedNews, setSelectedNews] = useState(null); // State to hold selected news item
 
 
 
@@ -206,8 +208,18 @@ function LoginDashBoard() {
       alert("An error occurred while removing the profile picture. Please try again.");
     }
   };
+
+  const handleShowNewsModal = (news) => {
+    setSelectedNews(news);
+    setShowNewsModal(true);
+  }
+
+  const closeHandleShowModal = () => {
+    setShowNewsModal(false);
+    setSelectedNews(null);
+  }
   
-  
+
 
   // Render account modal
   const RenderAccountShowModal = () => {
@@ -353,13 +365,35 @@ function LoginDashBoard() {
   useEffect(() => {
     setNewsData([]);
   }, [filterCountry, filterCategory]);
+  
+  const RenderNewsModal = () => {
+    if (showNewsModal && selectedNews) {
+      return (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black opacity-50" onClick={closeHandleShowModal}></div>
+          <div className="bg-white w-2/4 h-auto lg:w-1/2 p-6 rounded-lg shadow-lg relative z-10">
+            {selectedNews.urlToImage && (
+              <img src={selectedNews.urlToImage} alt={selectedNews.title} className='w-full h-64 object-cover mb-4 rounded-lg' />
+            )}
+            <h2 className='text-2xl font-bold mb-4'>{selectedNews.title}</h2>
+            <p className='text-gray-700 mb-4'>{selectedNews.description}</p>
+            <a href={selectedNews.url} target="_blank" rel="noopener noreferrer" className='text-blue-500 hover:underline'>Read more</a>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  }
+
 
   const RenderExplore = () => {
     return (
       <div className='news-container explore-scroll-container h-full overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
         {newsData.length ? (
           newsData.map((news, index) => (
-            <div key={index} className='news-item p-4 border rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105'>
+            <div key={index} className='news-item p-4 border rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105 cursor-pointer'
+            onClick={()=>handleShowNewsModal(news)}
+            >
               {news.urlToImage && (
                 <img src={news.urlToImage} alt={news.title} className='w-full h-48 object-cover mb-4 rounded-lg' />
               )}
@@ -373,6 +407,7 @@ function LoginDashBoard() {
       </div>
     );
   };
+  
   const RenderSideBar = () => {
     return (
       <div
@@ -448,11 +483,8 @@ function LoginDashBoard() {
           </div>
           <div className='w-2/4 border-b border-gray-300 my-5'></div>
           {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-4/5 mb-8' />}
-          <span className='flex items-center justify-center'>
-            <p className='font-semibold text-lg text-center mx-4'>Category: {filterCategory}</p>
-            <p className='font-semibold text-lg text-center mx-4'>Country: {filterCountry}</p>
-          </span>
         </div>
+        {RenderNewsModal()}
     </div>
   );
 }
