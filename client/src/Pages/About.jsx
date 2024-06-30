@@ -1,15 +1,15 @@
 import React from 'react'
-import Navbar from '../Components/Navbar' ; 
 import Logo from '../Media/LandingPage/Logo.png' ; 
+import { Link } from 'react-router-dom';
 
 function About() {
   return (
     <>
-    <div className='About w-screen h-screen'>
-        <Navbar />
-        <div className='w-full h-full '>
-        <span className='text-2xl font-bold flex items-center gap-2 m-2 flex items-center justify-center  mt-12 '><img src={Logo} className='w-7 h-7'></img>AudioPress
-        </span>
+    <div className='About w-screen h-screen overflow-x-hidden '>
+        
+        <div className='w-full h-full'>
+       <Link to='/'> <span className='text-2xl font-bold flex items-center gap-2 p-24 flex items-center justify-center   bg-red-300 '><img src={Logo} className='w-7 h-7'></img>AudioPress
+        </span></Link>
         <p className='text-2xl p-7 font-semibold '>
       
 
@@ -40,7 +40,7 @@ AudioPress is a cutting-edge AI-powered news aggregator designed to deliver the 
 
 At AudioPress, we believe in the power of informed communities. Our mission is to make staying updated effortless and enjoyable, providing you with the news you need, whenever you need it. Join the AudioPress community today and transform the way you experience news.
         </p>
-        <span className='flex items-center justify-center mt-16 text-gray-500'>©️Developed by Aditya Bhattacharjee 2024</span>
+        <span className='flex items-center justify-center mt-12 text-gray-500'>©️Developed by Aditya Bhattacharjee 2024</span>
         </div>
     </div>
     

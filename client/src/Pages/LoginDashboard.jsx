@@ -474,7 +474,7 @@ function LoginDashBoard() {
         {RenderAccountShowModal()} {/* Render account modal */}
       </div>
       {showSidebar && <RenderSideBar />}
-        <div className='Dashboard-main p-5 w-full flex flex-col items-center'>
+        <div className='Dashboard-main p-5 w-full flex flex-col items-center overflow-x-hidden overflow-y-hidden'>
           <h1 className='text-5xl font-bold text-center mb-8'>Your News Feed</h1>
           <p className='text-lg text-center mb-8'>Stay Ahead with Cutting-Edge Insights from Your AI Voice Assistant</p>
           <div className='flex justify-center mb-4'>
