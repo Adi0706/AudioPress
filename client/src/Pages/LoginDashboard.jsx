@@ -27,21 +27,12 @@ function LoginDashBoard() {
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null); // State to hold selected news item
 
-
   useEffect(() => {
     alanBtn({
       key: '6011c02d729c2c2bd2cf8098eeb5e38d2e956eca572e1d8b807a3e2338fdd0dc/stage',
-      onCommand: (commandData) => {
-        if (commandData.command === 'newHeadlines') {
-          setNewsData(commandData.articles || []);
-        } else if (commandData.command === 'highlight') {
-          const article = commandData.article;
-          if (article) {
-            setSelectedNews(article);
-            setShowNewsModal(true);
-          }
-        } else if (commandData.command === 'go:back') {
-          setShowExplore(false);
+      onCommand: ({ command, articles }) => {
+        if (command === 'newHeadlines') {
+          setNewsData(articles || []);
         }
       }
     });
