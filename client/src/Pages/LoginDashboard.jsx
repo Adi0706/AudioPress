@@ -10,6 +10,7 @@ import axios from 'axios';
 import { gapi } from 'gapi-script'; // Assuming you're using Google API for authentication
 import { CountryData } from '../filterData';
 import { CategoryData } from '../filterData';
+import alanBtn from '@alan-ai/alan-sdk-web';
 
 function LoginDashBoard() {
   const [showSidebar, setShowSideBar] = useState(false);
@@ -26,6 +27,26 @@ function LoginDashBoard() {
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [selectedNews, setSelectedNews] = useState(null); // State to hold selected news item
 
+
+  useEffect(() => {
+    alanBtn({
+      key: '6011c02d729c2c2bd2cf8098eeb5e38d2e956eca572e1d8b807a3e2338fdd0dc/stage',
+      onCommand: (commandData) => {
+        if (commandData.command === 'newHeadlines') {
+          setNewsData(commandData.articles || []);
+        } else if (commandData.command === 'highlight') {
+          const article = commandData.article;
+          if (article) {
+            setSelectedNews(article);
+            setShowNewsModal(true);
+          }
+        } else if (commandData.command === 'go:back') {
+          setShowExplore(false);
+        }
+      }
+    });
+  }, []);
+  
 
 
   const clickOutsideRef = useRef(null);
@@ -486,6 +507,7 @@ function LoginDashBoard() {
           {showExplore ? <RenderExplore /> : <img src={NewsImage} alt="dashboard image" className='w-2/4 h-4/5 mb-8' />}
         </div>
         {RenderNewsModal()}
+        
     </div>
   );
 }
